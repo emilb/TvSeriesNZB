@@ -1,0 +1,29 @@
+<TvSeriesNzb>
+
+  <Show>
+    <Name>House</Name>
+    <Season>5</Season>
+    <Episode>22</Episode>
+    <ID></ID>
+    <SearchSettings>
+      <Source>HDTV</Source>
+      <Format>720p</Format>
+      <Format>x264</Format>
+      <ExtraSearchParameters>-a:sub~German -a:sub~French -a:sub~Dutch</ExtraSearchParameters>
+    </SearchSettings>
+  </Show>
+
+  <Show>
+    <Name>Grey&apos;s Anatomy</Name>
+    <Season>5</Season>
+    <Episode>21</Episode>
+    <ID></ID>
+    <SearchSettings>
+      <Source>HDTV</Source>
+      <Format>720p</Format>
+      <Format>x264</Format>
+      <ExtraSearchParameters>-a:sub~German -a:sub~French -a:sub~Dutch</ExtraSearchParameters>
+    </SearchSettings>
+  </Show>
+  
+</TvSeriesNzb>
