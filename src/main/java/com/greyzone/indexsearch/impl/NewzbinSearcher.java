@@ -20,6 +20,7 @@ import au.com.bytecode.opencsv.CSVReader;
 import com.greyzone.domain.Episode;
 import com.greyzone.domain.SearchSettings;
 import com.greyzone.domain.Show;
+import com.greyzone.exceptions.ServiceUnavailableException;
 import com.greyzone.indexsearch.IndexSearcher;
 import com.greyzone.settings.ApplicationSettings;
 
@@ -32,21 +33,21 @@ public class NewzbinSearcher implements IndexSearcher {
 	private Logger log = Logger.getLogger(this.getClass());
 
 	@Override
-	public List<String> getIndexIds(Show show, List<Episode> episodes) {
-		List<String> result = new ArrayList<String>();
+	public List<Episode> getIndexIds(Show show, List<Episode> episodes) {
+		List<Episode> result = new ArrayList<Episode>();
 
 		for (Episode ep : episodes) {
 			String id = null;
 			try {
-				id = getBestSearchMatch(show, ep);
+				id = getBestSearchMatch(show, ep, 1);
 			} catch (IOException e) {
 				e.printStackTrace();
-			} catch (NeedToWaitException ntwe) {
+			} 
 
+			if (id != null) {
+				ep.setIndexId(id);
+				result.add(ep);
 			}
-
-			if (id != null)
-				result.add(id);
 		}
 
 		return result;
@@ -59,28 +60,42 @@ public class NewzbinSearcher implements IndexSearcher {
 	 * @return the first hit in the search, null if no hit
 	 * @throws IOException
 	 */
-	private String getBestSearchMatch(Show show, Episode episode)
-			throws IOException, NeedToWaitException {
+	private String getBestSearchMatch(Show show, Episode episode, int loopcount)
+			throws IOException {
+		
 		HttpMethod method = createSearch(show, episode);
 		HttpClient client = new HttpClient();
 
 		log.debug("Searching for: " + episode);
 		
 		client.executeMethod(method);
-		// log.debug(method.getResponseBodyAsString());
 
+		/*
+		 * This might be a litte crude. If newzbin replies with an HTML response
+		 * it is most likely because we have made too many searches but other issues
+		 * might be the cause for this aswell. Hence the loopcount, if it exceeds 3
+		 * something else is wrong and it is time to abort.
+		 */
 		if (method.getResponseHeader("Content-type").getValue().startsWith(
 				"text/html")) {
+			
 			// Wait for 3 seconds
-			log.debug("Too many searches, need to wait for 3 seconds.");
-
+			log.debug("Too many searches to Newzbin, need to wait for 3 seconds.");
+			
 			try {
-				Thread.currentThread().sleep(3000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+				Thread.currentThread().sleep(3500);
+			} catch (InterruptedException e) { }
 
-			return getBestSearchMatch(show, episode);
+			// We have tried too many times, something is wrong with newzbin!
+			if (loopcount > 2) {
+				log.error("Could not get a proper searchresult from Newzbin despite " + loopcount + " retries.");
+				log.error("Response from Newzbin:\n" + method.getResponseBodyAsString());
+				
+				throw new ServiceUnavailableException("Could not get a proper searchresult from Newzbin despite " + loopcount + " retries.");
+			}
+			
+			// Retry after wait
+			return getBestSearchMatch(show, episode, loopcount+1);
 		}
 
 		if (method.getResponseHeader("Content-type").getValue().startsWith(
@@ -89,18 +104,16 @@ public class NewzbinSearcher implements IndexSearcher {
 					new InputStreamReader(method.getResponseBodyAsStream())));
 
 			String[] firstLine = reader.readNext();
-			log.debug(StringUtils.join(firstLine, " "));
 
-			if (firstLine != null)
+			if (firstLine != null && firstLine.length > 0) {
+				log.debug("FOUND NZB for: " + episode);
 				return firstLine[1];
+			}
+			
 		}
 
-		log.debug("Got unknown response: " + method.getResponseBodyAsString());
+		log.debug("NO hits for:   " + episode);
 		return null;
-	}
-
-	private boolean checkForWaitInstruction(String content) {
-		return false;
 	}
 
 	/**
@@ -131,7 +144,6 @@ public class NewzbinSearcher implements IndexSearcher {
 				.toArray(new NameValuePair[] {});
 
 		get.setQueryString(valuePairs);
-		log.debug(get.getQueryString());
 
 		return get;
 	}
@@ -168,41 +180,5 @@ public class NewzbinSearcher implements IndexSearcher {
 		}
 
 		return sb.toString();
-	}
-
-	public void test() {
-
-		Show s = new Show();
-		s.setName("House");
-		SearchSettings ss = new SearchSettings();
-		ss.getSources().add("HDTV");
-		ss.getFormats().add("720p");
-		ss.getFormats().add("x264");
-
-		s.setSearchSettings(ss);
-
-		Episode ep1 = new Episode("House", "5", "20", "");
-		Episode ep2 = new Episode("House", "5", "21", "");
-		Episode ep3 = new Episode("House", "5", "22", "");
-		Episode ep4 = new Episode("House", "5", "23", "");
-
-		// getIndexIds(s, ep1, ep2, ep3, ep4);
-
-		// HttpClient client = new HttpClient();
-		// HttpMethod method = createSearch(s, ep);
-		// try {
-		// client.executeMethod(method);
-		// System.out.println(method.getResponseBodyAsString());
-		// } catch (HttpException e) {
-		// e.printStackTrace();
-		// } catch (IOException e) {
-		// e.printStackTrace();
-		// }
-
-	}
-
-	public static void main(String[] args) {
-		NewzbinSearcher s = new NewzbinSearcher();
-		s.test();
 	}
 }

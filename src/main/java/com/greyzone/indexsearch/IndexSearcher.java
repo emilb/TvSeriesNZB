@@ -7,6 +7,6 @@ import com.greyzone.domain.Show;
 
 public interface IndexSearcher {
 
-	public List<String> getIndexIds(Show show, List<Episode> episodes);
+	public List<Episode> getIndexIds(Show show, List<Episode> episodes);
 
 }

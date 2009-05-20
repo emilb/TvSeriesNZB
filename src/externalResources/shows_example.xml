@@ -1,0 +1,37 @@
+<TvSeriesNzb>
+  <Show>
+    <Name>House</Name>
+    <Season>5</Season>
+    <Episode>24</Episode>
+    <ID>3908</ID>    <SearchSettings>
+      <Source>HDTV</Source>
+      <Format>720p</Format>
+      <Format>x264</Format>
+      <ExtraSearchParameters>-a:sub~German -a:sub~French -a:sub~Dutch</ExtraSearchParameters>
+    </SearchSettings>
+  </Show>
+  <Show>
+    <Name>Grey&apos;s Anatomy</Name>
+    <Season>5</Season>
+    <Episode>22</Episode>
+    <ID>3741</ID>
+    <SearchSettings>
+      <Source>HDTV</Source>
+      <Format>720p</Format>
+      <Format>x264</Format>
+      <ExtraSearchParameters>-a:sub~German -a:sub~French -a:sub~Dutch</ExtraSearchParameters>
+    </SearchSettings>
+  </Show>
+  <Show>
+    <Name>Dollhouse</Name>
+    <Season>1</Season>
+    <Episode>11</Episode>
+    <ID>17816</ID>
+    <SearchSettings>
+      <Source>HDTV</Source>
+      <Format>720p</Format>
+      <Format>x264</Format>
+      <ExtraSearchParameters>-a:sub~German -a:sub~French -a:sub~Dutch</ExtraSearchParameters>
+    </SearchSettings>
+  </Show>
+</TvSeriesNzb>

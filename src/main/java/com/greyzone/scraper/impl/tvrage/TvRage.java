@@ -8,6 +8,7 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.omg.CORBA.NamedValue;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,8 @@ import com.thoughtworks.xstream.XStream;
 @Service
 public class TvRage implements TvScraper {
 
+	private Logger log = Logger.getLogger(this.getClass());
+	
 	@Override
 	public List<Episode> getAllAvailableEpisodes(Show show) {
 		if (StringUtils.isEmpty(show.getId())) {
@@ -32,6 +35,9 @@ public class TvRage implements TvScraper {
 		}
 		
 		try {
+			
+			log.debug("Searching TVRage available episodes for show: " + show.getName());
+			
 			TvRageShow tShow = (TvRageShow) queryTvRage("http://services.tvrage.com/feeds/episode_list.php", new NameValuePair("sid", show.getId()));
 
 			ArrayList<Episode> allEp = new ArrayList<Episode>();
@@ -46,7 +52,7 @@ public class TvRage implements TvScraper {
 			return allEp;
 			
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error("Failed to search TVRage available episodes!", e);
 		}
 		
 		return null;
@@ -84,15 +90,19 @@ public class TvRage implements TvScraper {
 	
 	private void populateTvRageId(Show show) {
 		try {
+			log.debug("Updating TVRage ID for show: " + show.getName());
+			
 			TvRageResults results = (TvRageResults) queryTvRage("http://services.tvrage.com/feeds/search.php", new NameValuePair("show", show.getName()));
 			for (TvRageResultShow rShow : results.getShows()) {
 				if (StringUtils.equalsIgnoreCase(show.getName(), rShow.getName())) {
 					show.setId(rShow.getShowid());
+					show.setName(rShow.getName());
 					return;
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error("Failed to update TVRage ID for show: " + show.getName());
+			throw new RuntimeException("TVRage failed to get ID", e);
 		}
 		
 	}
@@ -100,7 +110,6 @@ public class TvRage implements TvScraper {
 	private Object queryTvRage(String url, NameValuePair... parameters) throws Exception {
 		HttpClient client = new HttpClient();
 		
-		// "http://services.tvrage.com/feeds/episode_list.php?sid=3908"
 		HttpMethod method = new GetMethod(url);
 		method.setQueryString(parameters);
 		client.executeMethod(method);
@@ -118,39 +127,5 @@ public class TvRage implements TvScraper {
 		xstream.omitField(TvRageEpisodeList.class, "Special");
 		
 		return xstream.fromXML(resp);
-	}
-
-	public static void main(String[] args) {
-		TvRage t = new TvRage();
-		try {
-			t.test();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
-	public void test() throws Exception {
-			
-	
-		System.out.println("\n\nTvRage show id:");
-		Show s = new Show();
-		s.setName("house");
-		populateTvRageId(s);
-		System.out.println(s.getName() + " id: " + s.getId());
-		
-		System.out.println("\n\nAll episodes:");
-		List<Episode> allEp = getAllAvailableEpisodes(s);
-		for (Episode ep : allEp) {
-			System.out.println(ep.getSeason() + " " + ep.getEpisodeNo() + " " + ep.getEpisodeName());
-		}
-		
-		System.out.println("\n\nUnseen after season 4, ep 5:");
-		s.setCurrentlyWatchingSeason("4");
-		s.setLastDownloadedEpisode("05");
-		List<Episode> unseenEp = getAllUnseenEpisodes(s);
-		for (Episode ep : unseenEp) {
-			System.out.println(ep.getSeason() + " " + ep.getEpisodeNo() + " " + ep.getEpisodeName());
-		}
 	}
 }

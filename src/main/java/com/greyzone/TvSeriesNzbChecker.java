@@ -36,26 +36,41 @@ public class TvSeriesNzbChecker {
 		List<Show> shows = showStorage.getShows();
 		
 		for (Show show : shows) {
-			log.debug("Checking show: " + show.getName());
-			
-			List<Episode> episodes = tvScraper.getAllUnseenEpisodes(show);
-			if (episodes != null && episodes.size() > 0) {
-				log.debug("Found " + episodes.size() + " noof episodes");
-				
-				// Search
-				List<String> indexIds = indexSearcher.getIndexIds(show, episodes);
-				
-				log.debug("Ordering dowload of " + indexIds.size() + " episodes");
-				
-				// Order download
-				if (indexIds != null && indexIds.size() > 0) {
-					integrationDownloader.orderDownloadByIds(indexIds);
+			log.debug("Checking for new episodes in show: " + show.getName());
+			try {
+				List<Episode> episodes = tvScraper.getAllUnseenEpisodes(show);
+				if (episodes != null && episodes.size() > 0) {
+					log.debug("Found " + episodes.size() + " episodes that might have been aired.");
+					
+					// Search
+					List<Episode> episodesWithIndexId = indexSearcher.getIndexIds(show, episodes);
+					
+					log.debug("Ordering dowload of " + episodesWithIndexId.size() + " episodes.");
+					
+					Episode lastSuccessfullyDownloadedEpisode = null;
+					
+					for (Episode ep : episodesWithIndexId) {
+						try {
+							integrationDownloader.orderDownloadByEpisode(ep);
+							lastSuccessfullyDownloadedEpisode = ep;
+						} catch (Exception e) {
+							log.error("Failed to download episode: " + ep, e);
+						}
+					}
+					
+					if (episodesWithIndexId != null && episodesWithIndexId.size() != episodes.size()) {
+						log.warn("Failed to find all unseen episodes for " + show.getName() + " to download. Manual download may be required!");
+					}
+					
+					// Update last seen show
+					if (lastSuccessfullyDownloadedEpisode != null) {
+						log.debug("Updating last downloaded episode and season for " + show.getName());
+						show.setLastDownloadedEpisode(lastSuccessfullyDownloadedEpisode.getEpisodeNo());
+						show.setCurrentlyWatchingSeason(lastSuccessfullyDownloadedEpisode.getSeason());
+					}
 				}
-				
-				// Update last seen show
-				log.debug("Storing new state");
-				show.setLastDownloadedEpisode(episodes.get(episodes.size()-1).getEpisodeNo());
-				show.setCurrentlyWatchingSeason(episodes.get(episodes.size()-1).getSeason());
+			} catch (Exception e) {
+				log.error("Something failed when checking/downloading show " + show.getName());
 			}
 		}
 		

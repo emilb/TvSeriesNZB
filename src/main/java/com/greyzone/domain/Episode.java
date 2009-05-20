@@ -1,14 +1,16 @@
 package com.greyzone.domain;
 
-import org.apache.commons.lang.StringUtils;
 
 public class Episode {
 	private String show;
 	private String season;
 	private String episodeNo;
 	private String episodeName;
+	private String indexId;
 	
-	
+	public Episode() {
+		
+	}
 	
 	public Episode(String show, String season, String episodeNo, String episodeName) {
 		this.show = show;
@@ -42,12 +44,19 @@ public class Episode {
 		this.episodeName = episodeName;
 	}
 	
+	public String getIndexId() {
+		return indexId;
+	}
+
+	public void setIndexId(String indexId) {
+		this.indexId = indexId;
+	}
+
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(show); sb.append(" ");
-		sb.append("Season: "); sb.append(season); sb.append(" ");
-		sb.append("Episode: "); sb.append(episodeNo); sb.append(" ");
-		sb.append("Title: "); sb.append(episodeName); sb.append(" ");
+		sb.append(season); sb.append("x"); sb.append(episodeNo); sb.append(" ");
+		sb.append(episodeName);
 		
 		return sb.toString();
 	}

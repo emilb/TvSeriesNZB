@@ -1,11 +1,13 @@
 package com.greyzone.storage.impl;
 
-import java.util.ArrayList;
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
 
-import com.greyzone.domain.SearchSettings;
 import com.greyzone.domain.Show;
 import com.greyzone.domain.TvSeriesNzb;
 import com.greyzone.storage.ShowStorage;
@@ -14,32 +16,25 @@ import com.thoughtworks.xstream.XStream;
 @Service
 public class XmlShowStorage implements ShowStorage {
 
+	private Logger log = Logger.getLogger(this.getClass());
+	
+	public static String FILENAME_SHOW = "shows.xml";
+	
 	@Override
 	public List<Show> getShows() {
-		Show house = new Show();
-		house.setName("House");
-		house.setCurrentlyWatchingSeason("5");
-		house.setLastDownloadedEpisode("0");
 		
-		Show greys = new Show();
-		greys.setName("Grey's Anatomy");
-		greys.setCurrentlyWatchingSeason("5");
-		greys.setLastDownloadedEpisode("23");
+		XStream x = new XStream();
+		x.processAnnotations(TvSeriesNzb.class);
 		
-		SearchSettings ss = new SearchSettings();
-		ss.getSources().add("HDTV");
-		ss.getFormats().add("720p");
-		ss.getFormats().add("x264");
-		ss.setExtraSearchParams("-a:sub~German -a:sub~French -a:sub~Dutch");
-		
-		house.setSearchSettings(ss);
-		greys.setSearchSettings(ss);
-		
-		List<Show> showss = new ArrayList<Show>();
-//		showss.add(house);
-		showss.add(greys);
-		
-		return showss;
+		log.debug("Reading " + FILENAME_SHOW);
+		try {
+			FileInputStream fis = new FileInputStream(FILENAME_SHOW);
+			TvSeriesNzb t = (TvSeriesNzb)x.fromXML(fis);
+			return t.getShows();
+		} catch (Exception e) {
+			log.error("Could not read or parse " + FILENAME_SHOW, e);
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override
@@ -51,6 +46,16 @@ public class XmlShowStorage implements ShowStorage {
 		XStream x = new XStream();
 		x.processAnnotations(TvSeriesNzb.class);
 		String xml = x.toXML(t);
-		System.out.println(xml);
+		
+		try {
+			log.debug("Trying to save updated " + FILENAME_SHOW);
+			FileWriter fw = new FileWriter(FILENAME_SHOW);
+			BufferedWriter bw = new BufferedWriter(fw);
+			bw.write(xml);
+			bw.close();
+			log.debug(FILENAME_SHOW + " saved.");
+		} catch (Exception e) {
+			log.error("Failed to write to file: " + FILENAME_SHOW, e);
+		}
 	}
 }
