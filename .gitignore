@@ -3,6 +3,7 @@
 .settings
 target
 *.log
+*.log.*
 *.class
 shows.xml
 tvseriesnzb.conf

@@ -18,6 +18,5 @@ public class TvRageEpisodeList {
 	public void setSeasons(List<TvRageSeason> seasons) {
 		this.seasons = seasons;
 	}
-	
-	
+
 }

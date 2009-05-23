@@ -11,7 +11,7 @@ public class TvRageSeason {
 
 	@XStreamAsAttribute
 	private String no;
-	
+
 	@XStreamImplicit
 	@XStreamAlias("episode")
 	private List<TvRageEpisode> episodes;

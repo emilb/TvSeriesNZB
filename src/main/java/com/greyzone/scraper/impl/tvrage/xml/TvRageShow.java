@@ -1,9 +1,6 @@
 package com.greyzone.scraper.impl.tvrage.xml;
 
-import java.util.List;
-
 import com.thoughtworks.xstream.annotations.XStreamAlias;
-import com.thoughtworks.xstream.annotations.XStreamImplicit;
 
 @XStreamAlias("Show")
 public class TvRageShow {

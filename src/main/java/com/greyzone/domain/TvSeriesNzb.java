@@ -19,6 +19,5 @@ public class TvSeriesNzb {
 	public void setShows(List<Show> shows) {
 		this.shows = shows;
 	}
-	
-	
+
 }

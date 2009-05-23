@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import au.com.bytecode.opencsv.CSVReader;
 
 import com.greyzone.domain.Episode;
-import com.greyzone.domain.SearchSettings;
 import com.greyzone.domain.Show;
 import com.greyzone.exceptions.ServiceUnavailableException;
 import com.greyzone.indexsearch.IndexSearcher;
@@ -42,7 +41,7 @@ public class NewzbinSearcher implements IndexSearcher {
 				id = getBestSearchMatch(show, ep, 1);
 			} catch (IOException e) {
 				e.printStackTrace();
-			} 
+			}
 
 			if (id != null) {
 				ep.setIndexId(id);
@@ -62,40 +61,47 @@ public class NewzbinSearcher implements IndexSearcher {
 	 */
 	private String getBestSearchMatch(Show show, Episode episode, int loopcount)
 			throws IOException {
-		
+
 		HttpMethod method = createSearch(show, episode);
 		HttpClient client = new HttpClient();
 
 		log.debug("Searching for: " + episode);
-		
+
 		client.executeMethod(method);
 
 		/*
 		 * This might be a litte crude. If newzbin replies with an HTML response
-		 * it is most likely because we have made too many searches but other issues
-		 * might be the cause for this aswell. Hence the loopcount, if it exceeds 3
-		 * something else is wrong and it is time to abort.
+		 * it is most likely because we have made too many searches but other
+		 * issues might be the cause for this aswell. Hence the loopcount, if it
+		 * exceeds 3 something else is wrong and it is time to abort.
 		 */
 		if (method.getResponseHeader("Content-type").getValue().startsWith(
 				"text/html")) {
-			
+
 			// Wait for 3 seconds
-			log.debug("Too many searches to Newzbin, need to wait for 3 seconds.");
-			
+			log
+					.debug("Too many searches to Newzbin, need to wait for 3 seconds.");
+
 			try {
 				Thread.currentThread().sleep(3500);
-			} catch (InterruptedException e) { }
+			} catch (InterruptedException e) {
+			}
 
 			// We have tried too many times, something is wrong with newzbin!
 			if (loopcount > 2) {
-				log.error("Could not get a proper searchresult from Newzbin despite " + loopcount + " retries.");
-				log.error("Response from Newzbin:\n" + method.getResponseBodyAsString());
-				
-				throw new ServiceUnavailableException("Could not get a proper searchresult from Newzbin despite " + loopcount + " retries.");
+				log
+						.error("Could not get a proper searchresult from Newzbin despite "
+								+ loopcount + " retries.");
+				log.error("Response from Newzbin:\n"
+						+ method.getResponseBodyAsString());
+
+				throw new ServiceUnavailableException(
+						"Could not get a proper searchresult from Newzbin despite "
+								+ loopcount + " retries.");
 			}
-			
+
 			// Retry after wait
-			return getBestSearchMatch(show, episode, loopcount+1);
+			return getBestSearchMatch(show, episode, loopcount + 1);
 		}
 
 		if (method.getResponseHeader("Content-type").getValue().startsWith(
@@ -109,7 +115,7 @@ public class NewzbinSearcher implements IndexSearcher {
 				log.debug("FOUND NZB for: " + episode);
 				return firstLine[1];
 			}
-			
+
 		}
 
 		log.debug("NO hits for:   " + episode);

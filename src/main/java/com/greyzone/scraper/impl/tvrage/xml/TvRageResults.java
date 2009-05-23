@@ -19,6 +19,5 @@ public class TvRageResults {
 	public void setShows(List<TvRageResultShow> shows) {
 		this.shows = shows;
 	}
-	
-	
+
 }
