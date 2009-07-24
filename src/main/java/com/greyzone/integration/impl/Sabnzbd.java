@@ -11,7 +11,7 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.greyzone.domain.Episode;
+import com.greyzone.domain.tv.Episode;
 import com.greyzone.integration.IntegrationDownloader;
 import com.greyzone.integration.impl.xml.QJob;
 import com.greyzone.integration.impl.xml.QStatus;

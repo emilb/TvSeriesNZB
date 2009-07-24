@@ -6,9 +6,12 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.NameValuePair;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -17,8 +20,9 @@ import org.springframework.stereotype.Service;
 
 import au.com.bytecode.opencsv.CSVReader;
 
-import com.greyzone.domain.Episode;
-import com.greyzone.domain.Show;
+import com.greyzone.domain.tv.Episode;
+import com.greyzone.domain.tv.Show;
+import com.greyzone.exceptions.AuthenticationException;
 import com.greyzone.exceptions.ServiceUnavailableException;
 import com.greyzone.indexsearch.IndexSearcher;
 import com.greyzone.settings.ApplicationSettings;
@@ -39,9 +43,11 @@ public class NewzbinSearcher implements IndexSearcher {
 			String id = null;
 			try {
 				id = getBestSearchMatch(show, ep, 1);
+			} catch (AuthenticationException ae) {
+				throw ae;
 			} catch (IOException e) {
 				e.printStackTrace();
-			}
+			} 
 
 			if (id != null) {
 				ep.setIndexId(id);
@@ -65,6 +71,9 @@ public class NewzbinSearcher implements IndexSearcher {
 		HttpMethod method = createSearch(show, episode);
 		HttpClient client = new HttpClient();
 
+		Credentials credentials = new UsernamePasswordCredentials(settings.getNewzbinUsername(), settings.getNewzbinPassword());
+		client.getState().setCredentials(AuthScope.ANY, credentials);
+		
 		log.debug("Searching for: " + episode);
 
 		client.executeMethod(method);
@@ -72,15 +81,14 @@ public class NewzbinSearcher implements IndexSearcher {
 		/*
 		 * This might be a litte crude. If newzbin replies with an HTML response
 		 * it is most likely because we have made too many searches but other
-		 * issues might be the cause for this aswell. Hence the loopcount, if it
+		 * issues might be the cause for this as well. Hence the loopcount, if it
 		 * exceeds 3 something else is wrong and it is time to abort.
 		 */
 		if (method.getResponseHeader("Content-type").getValue().startsWith(
 				"text/html")) {
 
 			// Wait for 3 seconds
-			log
-					.debug("Too many searches to Newzbin, need to wait for 3 seconds.");
+			log.debug("Too many searches to Newzbin, need to wait for 3 seconds.");
 
 			try {
 				Thread.currentThread().sleep(3500);
@@ -89,9 +97,8 @@ public class NewzbinSearcher implements IndexSearcher {
 
 			// We have tried too many times, something is wrong with newzbin!
 			if (loopcount > 2) {
-				log
-						.error("Could not get a proper searchresult from Newzbin despite "
-								+ loopcount + " retries.");
+				log.error("Could not get a proper searchresult from Newzbin despite "
+						+ loopcount + " retries.");
 				log.error("Response from Newzbin:\n"
 						+ method.getResponseBodyAsString());
 
@@ -111,9 +118,16 @@ public class NewzbinSearcher implements IndexSearcher {
 
 			String[] firstLine = reader.readNext();
 
-			if (firstLine != null && firstLine.length > 0) {
+			if (firstLine != null && firstLine.length > 1) {
 				log.debug("FOUND NZB for: " + episode);
 				return firstLine[1];
+			}
+			
+			// Check if authentication to newzbin failed
+			if (firstLine != null && firstLine.length == 1) {
+				if (firstLine[0].startsWith("Error: Login Required")) {
+					throw new AuthenticationException("Failed to authenticate at Newzbin. Check configuration.");
+				}
 			}
 
 		}

@@ -8,8 +8,9 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.greyzone.domain.Episode;
-import com.greyzone.domain.Show;
+import com.greyzone.domain.tv.Episode;
+import com.greyzone.domain.tv.Show;
+import com.greyzone.exceptions.AuthenticationException;
 import com.greyzone.indexsearch.IndexSearcher;
 import com.greyzone.integration.IntegrationDownloader;
 import com.greyzone.scraper.TvScraper;
@@ -102,9 +103,12 @@ public class TvSeriesNzbChecker {
 										.getSeason());
 					}
 				}
+			} catch (AuthenticationException ae) {
+				log.error(ae.getMessage());
+				throw new RuntimeException("Fatal exception, exit.");
 			} catch (Exception e) {
 				log.error("Something failed when checking/downloading show "
-						+ show.getName());
+						+ show.getName() + " Err: " + e.getMessage());
 			}
 		}
 

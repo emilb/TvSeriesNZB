@@ -2,8 +2,8 @@ package com.greyzone.scraper;
 
 import java.util.List;
 
-import com.greyzone.domain.Episode;
-import com.greyzone.domain.Show;
+import com.greyzone.domain.tv.Episode;
+import com.greyzone.domain.tv.Show;
 
 public interface TvScraper {
 

@@ -8,8 +8,8 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
 
-import com.greyzone.domain.Show;
-import com.greyzone.domain.TvSeriesNzb;
+import com.greyzone.domain.tv.Show;
+import com.greyzone.domain.tv.TvSeriesNzb;
 import com.greyzone.storage.ShowStorage;
 import com.thoughtworks.xstream.XStream;
 

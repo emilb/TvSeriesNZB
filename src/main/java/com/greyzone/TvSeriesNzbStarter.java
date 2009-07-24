@@ -9,7 +9,7 @@ import org.apache.commons.cli.PosixParser;
 import org.apache.log4j.Logger;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import com.greyzone.domain.Show;
+import com.greyzone.domain.tv.Show;
 import com.greyzone.integration.impl.Sabnzbd;
 import com.greyzone.scraper.impl.tvrage.TvRage;
 import com.greyzone.settings.ApplicationSettings;

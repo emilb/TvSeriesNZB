@@ -46,6 +46,14 @@ public class ApplicationSettings {
 		return getProperty("sabnzbd.password", "");
 	}
 
+	public String getNewzbinUsername() {
+		return getProperty("newzbin.username", "");
+	}
+	
+	public String getNewzbinPassword() {
+		return getProperty("newzbin.password", "");
+	}
+	
 	public boolean isDryRun() {
 		return dryRun;
 	}

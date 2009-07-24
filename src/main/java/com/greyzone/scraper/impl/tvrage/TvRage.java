@@ -13,8 +13,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Service;
 
-import com.greyzone.domain.Episode;
-import com.greyzone.domain.Show;
+import com.greyzone.domain.tv.Episode;
+import com.greyzone.domain.tv.Show;
 import com.greyzone.scraper.TvScraper;
 import com.greyzone.scraper.impl.tvrage.xml.TvRageEpisode;
 import com.greyzone.scraper.impl.tvrage.xml.TvRageEpisodeList;

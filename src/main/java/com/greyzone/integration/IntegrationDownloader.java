@@ -2,7 +2,7 @@ package com.greyzone.integration;
 
 import java.util.List;
 
-import com.greyzone.domain.Episode;
+import com.greyzone.domain.tv.Episode;
 
 public interface IntegrationDownloader {
 
