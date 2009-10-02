@@ -86,11 +86,19 @@ public class TvRage implements TvScraper {
 		ArrayList<Episode> unseenEp = new ArrayList<Episode>();
 
 		for (Episode ep : allEp) {
-			if ((ep.getSeason().compareTo(show.getCurrentlyWatchingSeason()) == 0 && ep
-					.getEpisodeNo().compareTo(show.getLastDownloadedEpisode()) > 0)
+			
+			
+			if ((ep.getSeason().compareTo(show.getCurrentlyWatchingSeason()) == 0 
+					&& ep.getEpisodeNo().compareTo(show.getLastDownloadedEpisode()) > 0)
 					|| (ep.getSeason().compareTo(
 							show.getCurrentlyWatchingSeason()) > 0)) {
-				unseenEp.add(ep);
+				
+				// Only add the episode if it really has been aired
+				if (ep.getDateAired() != null && ep.getDateAired().before(new Date())) {
+					unseenEp.add(ep);
+				}
+				
+				
 			}
 		}
 
