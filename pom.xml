@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.greyzone</groupId>
 	<artifactId>tvseriesnzb</artifactId>
-	<version>0.3</version>
+	<version>0.4</version>
 	<packaging>jar</packaging>
 	<name>Tv series NZB downloader</name>
 	<url></url>
