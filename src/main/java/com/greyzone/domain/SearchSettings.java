@@ -29,8 +29,8 @@ public class SearchSettings {
 		sourceMap.put("Workprint", "a:videos~Workprint");
 		sourceMap.put("VHS", "a:videos~VHS");
 		sourceMap.put("DVD", "a:videos~DVD");
-		sourceMap.put("HD-DVD", "videos~HD-DVD");
-		sourceMap.put("Blu-Ray", "videos~Blu-Ray");
+		sourceMap.put("HD-DVD", "a:videos~HD-DVD");
+		sourceMap.put("Blu-Ray", "a:videos~Blu-Ray");
 		sourceMap.put("TVCap", "a:videos~TVCap");
 		sourceMap.put("HDTV", "a:videos~HDTV");
 		sourceMap.put("Unknown", "a:videos~Unknown");
@@ -38,10 +38,10 @@ public class SearchSettings {
 		formatMap.put("DivX", "a:videof~DivX");
 		formatMap.put("XviD", "a:videof~XviD");
 		formatMap.put("DVD", "a:videof~DVD");
-		formatMap.put("Blu-Ray", "videof~Blu-Ray");
-		formatMap.put("HD-DVD", "videof~HD-DVD");
-		formatMap.put("HD.TS", "videof~HD.TS");
-		formatMap.put("H.264", "videof~H.264");
+		formatMap.put("Blu-Ray", "a:videof~Blu-Ray");
+		formatMap.put("HD-DVD", "a:videof~HD-DVD");
+		formatMap.put("HD.TS", "a:videof~HD.TS");
+		formatMap.put("H.264", "a:videof~H.264");
 		formatMap.put("x264", "a:videof~x264");
 		formatMap.put("AVCHD", "a:videof~AVCHD");
 		formatMap.put("SVCD", "a:videof~SVCD");
