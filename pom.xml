@@ -43,7 +43,7 @@
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>com.greyzone.TvSeriesNzbStarter</mainClass>
+							<mainClass>com.greyzone.NzbDownloadStarter</mainClass>
 							<classpathPrefix>lib/</classpathPrefix>
 						</manifest>
 					</archive>

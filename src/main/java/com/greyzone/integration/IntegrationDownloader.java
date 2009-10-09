@@ -6,9 +6,11 @@ import com.greyzone.domain.tv.Episode;
 
 public interface IntegrationDownloader {
 
-	public void orderDownloadByIds(List<String> ids);
+    public void orderDownloadById(String id);
 
-	public void orderDownloadByEpisode(Episode ep);
+    public void orderDownloadByIds(List<String> ids);
 
-	public void testIntegration();
+    public void orderDownloadByEpisode(Episode ep);
+
+    public void testIntegration();
 }

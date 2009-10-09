@@ -21,127 +21,119 @@ import com.thoughtworks.xstream.XStream;
 @Service("Sabnzbd")
 public class Sabnzbd implements IntegrationDownloader {
 
-	private Logger log = Logger.getLogger(this.getClass());
+    private Logger              log = Logger.getLogger(this.getClass());
 
-	@Autowired
-	private ApplicationSettings appSettings;
+    @Autowired
+    private ApplicationSettings appSettings;
 
-	@Override
-	public void orderDownloadByIds(List<String> ids) {
-		HttpClient client = new HttpClient();
+    @Override
+    public void orderDownloadById(String id) {
+        HttpClient client = new HttpClient();
 
-		for (String id : ids) {
-			GetMethod method = new GetMethod(appSettings.getSabnzbdUrl());
+        GetMethod method = new GetMethod(appSettings.getSabnzbdUrl());
 
-			List<NameValuePair> queryParams = new ArrayList<NameValuePair>();
-			queryParams.add(new NameValuePair("apikey", appSettings
-					.getSabnzbdApiKey()));
-			queryParams.add(new NameValuePair("mode", "addid"));
-			queryParams.add(new NameValuePair("name", id));
+        List<NameValuePair> queryParams = new ArrayList<NameValuePair>();
+        queryParams.add(new NameValuePair("apikey", appSettings.getSabnzbdApiKey()));
+        queryParams.add(new NameValuePair("mode", "addid"));
+        queryParams.add(new NameValuePair("name", id));
 
-			// Only supply username and password if they are specified in
-			// configuration
-			if (!StringUtils.isEmpty(appSettings.getSabnzbdUsername())
-					|| !StringUtils.isEmpty(appSettings.getSabnzbdPassword())) {
-				queryParams.add(new NameValuePair("ma_username", appSettings
-						.getSabnzbdUsername()));
-				queryParams.add(new NameValuePair("ma_password", appSettings
-						.getSabnzbdPassword()));
-			}
+        // Only supply username and password if they are specified in
+        // configuration
+        if (!StringUtils.isEmpty(appSettings.getSabnzbdUsername())
+                || !StringUtils.isEmpty(appSettings.getSabnzbdPassword())) {
+            queryParams.add(new NameValuePair("ma_username", appSettings.getSabnzbdUsername()));
+            queryParams.add(new NameValuePair("ma_password", appSettings.getSabnzbdPassword()));
+        }
 
-			NameValuePair[] valuePairs = queryParams
-					.toArray(new NameValuePair[] {});
+        NameValuePair[] valuePairs = queryParams.toArray(new NameValuePair[] {});
 
-			method.setQueryString(valuePairs);
+        method.setQueryString(valuePairs);
 
-			try {
-				log.debug("Instructing SABnzbd to download newzbin id: " + id
-						+ " to: " + appSettings.getSabnzbdUrl());
+        try {
+            log.debug("Instructing SABnzbd to download newzbin id: " + id + " to: "
+                    + appSettings.getSabnzbdUrl());
 
-				// Do real download only if in dry run
-				if (!appSettings.isDryRun()) {
-					client.executeMethod(method);
+            // Do real download only if in dry run
+            if (!appSettings.isDryRun()) {
+                client.executeMethod(method);
 
-					String result = method.getResponseBodyAsString();
-					if (!result.startsWith("ok")) {
-						log
-								.error("SABnzbd reported an error, check your configuration! Message from SABnzbd: "
-										+ result);
+                String result = method.getResponseBodyAsString();
+                if (!result.startsWith("ok")) {
+                    log.error("SABnzbd reported an error, check your configuration! Message from SABnzbd: "
+                            + result);
 
-						// Check if the error might be because of wrong url
-						if ((appSettings.getSabnzbdUrl().endsWith("api"))
-								|| (appSettings.getSabnzbdUrl()
-										.endsWith("api/"))) {
-							log
-									.warn("The configuration property sabnzbd.url doesn't end with api, check if this really is correct!");
-						}
+                    // Check if the error might be because of wrong url
+                    if ((appSettings.getSabnzbdUrl().endsWith("api"))
+                            || (appSettings.getSabnzbdUrl().endsWith("api/"))) {
+                        log
+                                .warn("The configuration property sabnzbd.url doesn't end with api, check if this really is correct!");
+                    }
 
-						throw new RuntimeException("SABnzbd integration failed");
-					}
-				}
-			} catch (Exception e) {
-				log.error("Failed to contact SABnzbd", e);
-				throw new RuntimeException("Could not contact SABnzbd.");
-			}
-		}
-	}
+                    throw new RuntimeException("SABnzbd integration failed");
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to contact SABnzbd", e);
+            throw new RuntimeException("Could not contact SABnzbd.");
+        }
+    }
 
-	@Override
-	public void testIntegration() {
-		log.info("Testing SABnzbd integration...");
+    @Override
+    public void orderDownloadByIds(List<String> ids) {
+        for (String id : ids) {
+            orderDownloadById(id);
+        }
+    }
 
-		HttpClient client = new HttpClient();
-		GetMethod method = new GetMethod(appSettings.getSabnzbdUrl());
+    @Override
+    public void testIntegration() {
+        log.info("Testing SABnzbd integration...");
 
-		List<NameValuePair> queryParams = new ArrayList<NameValuePair>();
-		queryParams.add(new NameValuePair("apikey", appSettings
-				.getSabnzbdApiKey()));
-		queryParams.add(new NameValuePair("mode", "qstatus"));
-		queryParams.add(new NameValuePair("output", "xml"));
+        HttpClient client = new HttpClient();
+        GetMethod method = new GetMethod(appSettings.getSabnzbdUrl());
 
-		// Only supply username and password if they are specified in
-		// configuration
-		if (!StringUtils.isEmpty(appSettings.getSabnzbdUsername())
-				|| !StringUtils.isEmpty(appSettings.getSabnzbdPassword())) {
-			queryParams.add(new NameValuePair("ma_username", appSettings
-					.getSabnzbdUsername()));
-			queryParams.add(new NameValuePair("ma_password", appSettings
-					.getSabnzbdPassword()));
-		}
+        List<NameValuePair> queryParams = new ArrayList<NameValuePair>();
+        queryParams.add(new NameValuePair("apikey", appSettings.getSabnzbdApiKey()));
+        queryParams.add(new NameValuePair("mode", "qstatus"));
+        queryParams.add(new NameValuePair("output", "xml"));
 
-		NameValuePair[] valuePairs = queryParams
-				.toArray(new NameValuePair[] {});
+        // Only supply username and password if they are specified in
+        // configuration
+        if (!StringUtils.isEmpty(appSettings.getSabnzbdUsername())
+                || !StringUtils.isEmpty(appSettings.getSabnzbdPassword())) {
+            queryParams.add(new NameValuePair("ma_username", appSettings.getSabnzbdUsername()));
+            queryParams.add(new NameValuePair("ma_password", appSettings.getSabnzbdPassword()));
+        }
 
-		method.setQueryString(valuePairs);
-		String resp = null;
-		try {
-			log.info("Querying SABnzbd status...");
-			client.executeMethod(method);
-			resp = method.getResponseBodyAsString();
-			XStream xstream = new XStream();
-			xstream.alias("queue", QStatus.class);
-			xstream.alias("job", QJob.class);
-			QStatus status = new QStatus();
-			status = (QStatus) xstream.fromXML(resp);
+        NameValuePair[] valuePairs = queryParams.toArray(new NameValuePair[] {});
 
-			log.info("\n" + status);
-			log.info("... SABnzbd integration working correctly!");
-		} catch (Exception e) {
-			throw new RuntimeException(
-					"Failed to connect to SABnzd correctly, response: " + resp,
-					e);
-		}
-	}
+        method.setQueryString(valuePairs);
+        String resp = null;
+        try {
+            log.info("Querying SABnzbd status...");
+            client.executeMethod(method);
+            resp = method.getResponseBodyAsString();
+            XStream xstream = new XStream();
+            xstream.alias("queue", QStatus.class);
+            xstream.alias("job", QJob.class);
+            QStatus status = new QStatus();
+            status = (QStatus) xstream.fromXML(resp);
 
-	@Override
-	public void orderDownloadByEpisode(Episode ep) {
-		if (StringUtils.isEmpty(ep.getIndexId())) {
-			log
-					.debug("Could not download episode because no newzbin id was specified");
-			return;
-		}
-		List<String> ids = new ArrayList<String>();
-		ids.add(ep.getIndexId());
-		orderDownloadByIds(ids);
-	}
+            log.info("\n" + status);
+            log.info("... SABnzbd integration working correctly!");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to connect to SABnzd correctly, response: " + resp, e);
+        }
+    }
+
+    @Override
+    public void orderDownloadByEpisode(Episode ep) {
+        if (StringUtils.isEmpty(ep.getIndexId())) {
+            log.debug("Could not download episode because no newzbin id was specified");
+            return;
+        }
+        List<String> ids = new ArrayList<String>();
+        ids.add(ep.getIndexId());
+        orderDownloadByIds(ids);
+    }
 }

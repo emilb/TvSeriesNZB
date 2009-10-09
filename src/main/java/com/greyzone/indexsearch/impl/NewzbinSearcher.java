@@ -20,9 +20,11 @@ import org.springframework.stereotype.Service;
 
 import au.com.bytecode.opencsv.CSVReader;
 
+import com.greyzone.domain.movie.Movie;
 import com.greyzone.domain.tv.Episode;
 import com.greyzone.domain.tv.Show;
 import com.greyzone.exceptions.AuthenticationException;
+import com.greyzone.exceptions.NeedToTryAgainException;
 import com.greyzone.exceptions.ServiceUnavailableException;
 import com.greyzone.indexsearch.IndexSearcher;
 import com.greyzone.settings.ApplicationSettings;
@@ -30,175 +32,270 @@ import com.greyzone.settings.ApplicationSettings;
 @Service
 public class NewzbinSearcher implements IndexSearcher {
 
-	@Autowired
-	ApplicationSettings settings;
+    @Autowired
+    ApplicationSettings  settings;
 
-	private Logger log = Logger.getLogger(this.getClass());
+    private final Logger log = Logger.getLogger(this.getClass());
 
-	@Override
-	public List<Episode> getIndexIds(Show show, List<Episode> episodes) {
-		List<Episode> result = new ArrayList<Episode>();
+    @Override
+    public List<Episode> getIndexIds(Show show, List<Episode> episodes) {
+        List<Episode> result = new ArrayList<Episode>();
 
-		for (Episode ep : episodes) {
-			String id = null;
-			try {
-				id = getBestSearchMatch(show, ep, 1);
-			} catch (AuthenticationException ae) {
-				throw ae;
-			} catch (IOException e) {
-				e.printStackTrace();
-			} 
+        for (Episode ep : episodes) {
+            String id = null;
+            try {
+                id = getBestSearchMatch(show, ep, 1);
+            } catch (AuthenticationException ae) {
+                throw ae;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
-			if (id != null) {
-				ep.setIndexId(id);
-				result.add(ep);
-			}
-		}
+            if (id != null) {
+                ep.setIndexId(id);
+                result.add(ep);
+            }
+        }
 
-		return result;
-	}
+        return result;
+    }
 
-	/**
-	 * 
-	 * @param show
-	 * @param episode
-	 * @return the first hit in the search, null if no hit
-	 * @throws IOException
-	 */
-	private String getBestSearchMatch(Show show, Episode episode, int loopcount)
-			throws IOException {
+    @Override
+    public String getIndexId(Movie movie) {
+        try {
+            return getBestSearchMatch(movie, 1);
+        } catch (AuthenticationException ae) {
+            throw ae;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-		HttpMethod method = createSearch(show, episode);
-		HttpClient client = new HttpClient();
+        return null;
+    }
 
-		Credentials credentials = new UsernamePasswordCredentials(settings.getNewzbinUsername(), settings.getNewzbinPassword());
-		client.getState().setCredentials(AuthScope.ANY, credentials);
-		
-		log.debug("Searching for: " + episode);
+    private String getBestSearchMatch(Movie movie, int loopcount) throws IOException {
+        HttpMethod method = createSearch(movie);
+        HttpClient client = createHttpClient();
 
-		client.executeMethod(method);
+        log.debug("Searching for: " + movie);
 
-		/*
-		 * This might be a litte crude. If newzbin replies with an HTML response
-		 * it is most likely because we have made too many searches but other
-		 * issues might be the cause for this as well. Hence the loopcount, if it
-		 * exceeds 3 something else is wrong and it is time to abort.
-		 */
-		if (method.getResponseHeader("Content-type").getValue().startsWith(
-				"text/html")) {
+        client.executeMethod(method);
 
-			// Wait for 3 seconds
-			log.debug("Too many searches to Newzbin, need to wait for 3 seconds.");
+        try {
+            String nzbId = parseSearchResult(method, loopcount);
+            if (nzbId == null) {
+                log.debug("NO hits for:   " + movie);
+                return null;
+            }
 
-			try {
-				Thread.currentThread().sleep(3500);
-			} catch (InterruptedException e) {
-			}
+            log.debug("FOUND NZB for: " + movie);
 
-			// We have tried too many times, something is wrong with newzbin!
-			if (loopcount > 2) {
-				log.error("Could not get a proper searchresult from Newzbin despite "
-						+ loopcount + " retries.");
-				log.error("Response from Newzbin:\n"
-						+ method.getResponseBodyAsString());
+            return nzbId;
 
-				throw new ServiceUnavailableException(
-						"Could not get a proper searchresult from Newzbin despite "
-								+ loopcount + " retries.");
-			}
+        } catch (NeedToTryAgainException tryAgain) {
+            return getBestSearchMatch(movie, loopcount++);
+        }
+    }
 
-			// Retry after wait
-			return getBestSearchMatch(show, episode, loopcount + 1);
-		}
+    private HttpClient createHttpClient() {
+        HttpClient client = new HttpClient();
+        Credentials credentials = new UsernamePasswordCredentials(settings.getNewzbinUsername(), settings
+                .getNewzbinPassword());
+        client.getState().setCredentials(AuthScope.ANY, credentials);
+        return client;
+    }
 
-		if (method.getResponseHeader("Content-type").getValue().startsWith(
-				"text/csv")) {
-			CSVReader reader = new CSVReader(new BufferedReader(
-					new InputStreamReader(method.getResponseBodyAsStream())));
+    /**
+     * 
+     * @param show
+     * @param episode
+     * @return the first hit in the search, null if no hit
+     * @throws IOException
+     */
+    private String getBestSearchMatch(Show show, Episode episode, int loopcount) throws IOException {
 
-			String[] firstLine = reader.readNext();
+        HttpMethod method = createSearch(show, episode);
+        HttpClient client = createHttpClient();
 
-			if (firstLine != null && firstLine.length > 1) {
-				log.debug("FOUND NZB for: " + episode);
-				return firstLine[1];
-			}
-			
-			// Check if authentication to newzbin failed
-			if (firstLine != null && firstLine.length == 1) {
-				if (firstLine[0].startsWith("Error: Login Required")) {
-					throw new AuthenticationException("Failed to authenticate at Newzbin. Check configuration.");
-				}
-			}
+        log.debug("Searching for: " + episode);
 
-		}
+        client.executeMethod(method);
 
-		log.debug("NO hits for:   " + episode);
-		return null;
-	}
+        try {
+            String nzbId = parseSearchResult(method, loopcount);
+            if (nzbId == null) {
+                log.debug("NO hits for:   " + episode);
+                return null;
+            }
 
-	/**
-	 * 
-	 * @param show
-	 * @param episode
-	 * @return the method to invoke the search at Newzbin
-	 */
-	private HttpMethod createSearch(Show show, Episode episode) {
-		GetMethod get = new GetMethod("http://v3.newzbin.com/search/");
+            log.debug("FOUND NZB for: " + episode);
 
-		List<NameValuePair> queryParams = new ArrayList<NameValuePair>();
-		queryParams
-				.add(new NameValuePair("q", createSearchQuery(show, episode)));
-		queryParams.add(new NameValuePair("searchaction", "Search"));
-		queryParams.add(new NameValuePair("fpn", "p"));
-		queryParams.add(new NameValuePair("category", "8"));
-		queryParams.add(new NameValuePair("area", "-1"));
-		queryParams.add(new NameValuePair("u_nfo_posts_only", "0"));
-		queryParams.add(new NameValuePair("u_comment_posts_only", "0"));
-		queryParams.add(new NameValuePair("u_url_posts_only", "0"));
-		queryParams.add(new NameValuePair("sort", "ps_edit_date"));
-		queryParams.add(new NameValuePair("order", "desc"));
-		queryParams.add(new NameValuePair("areadone", "-1"));
-		queryParams.add(new NameValuePair("feed", "csv"));
+            return nzbId;
 
-		NameValuePair[] valuePairs = queryParams
-				.toArray(new NameValuePair[] {});
+        } catch (NeedToTryAgainException tryAgain) {
+            return getBestSearchMatch(show, episode, loopcount++);
+        }
+    }
 
-		get.setQueryString(valuePairs);
+    private String parseSearchResult(HttpMethod method, int loopCount) throws IOException {
 
-		return get;
-	}
+        /*
+         * This might be a litte crude. If newzbin replies with an HTML response it is most likely because we
+         * have made too many searches but other issues might be the cause for this as well. Hence the
+         * loopcount, if it exceeds 3 something else is wrong and it is time to abort.
+         */
+        if (method.getResponseHeader("Content-type").getValue().startsWith("text/html")) {
 
-	/**
-	 * 
-	 * @param show
-	 * @param episode
-	 * @return The query with any extra search attributes
-	 */
-	private String createSearchQuery(Show show, Episode episode) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("^");
-		sb.append(show.getName());
-		sb.append(" ");
-		sb.append(episode.getSeason());
-		sb.append("x");
-		sb.append(episode.getEpisodeNo());
-		sb.append(" ");
+            // Wait for 3 seconds
+            log.debug("Too many searches to Newzbin, need to wait for 3 seconds.");
 
-		if (show.getSearchSettings() != null) {
-			List<String> searchAttributes = show.getSearchSettings()
-					.getAllSearchAttributes();
-			for (String attrib : searchAttributes) {
-				sb.append(attrib);
-				sb.append(" ");
-			}
+            try {
+                Thread.currentThread().sleep(3500);
+            } catch (InterruptedException e) {}
 
-			if (!StringUtils.isEmpty(show.getSearchSettings()
-					.getExtraSearchParams())) {
-				sb.append(show.getSearchSettings().getExtraSearchParams());
-				sb.append(" ");
-			}
-		}
+            // We have tried too many times, something is wrong with newzbin!
+            if (loopCount > 2) {
+                log.error("Could not get a proper searchresult from Newzbin despite " + loopCount
+                        + " retries.");
+                log.error("Response from Newzbin:\n" + method.getResponseBodyAsString());
 
-		return sb.toString();
-	}
+                throw new ServiceUnavailableException(
+                        "Could not get a proper searchresult from Newzbin despite " + loopCount + " retries.");
+            }
+
+            throw new NeedToTryAgainException();
+
+        }
+
+        if (method.getResponseHeader("Content-type").getValue().startsWith("text/csv")) {
+            CSVReader reader = new CSVReader(new BufferedReader(new InputStreamReader(method
+                    .getResponseBodyAsStream())));
+
+            String[] firstLine = reader.readNext();
+
+            if (firstLine != null && firstLine.length > 1) {
+
+                return firstLine[1];
+            }
+
+            // Check if authentication to newzbin failed
+            if (firstLine != null && firstLine.length == 1) {
+                if (firstLine[0].startsWith("Error: Login Required")) {
+                    throw new AuthenticationException(
+                            "Failed to authenticate at Newzbin. Check configuration.");
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private HttpMethod createSearch(Movie movie) {
+        GetMethod get = new GetMethod("http://v3.newzbin.com/search/");
+
+        List<NameValuePair> queryParams = new ArrayList<NameValuePair>();
+        queryParams.add(new NameValuePair("q", createSearchQuery(movie)));
+        queryParams.add(new NameValuePair("searchaction", "Search"));
+        queryParams.add(new NameValuePair("fpn", "p"));
+        queryParams.add(new NameValuePair("category", "6"));
+        queryParams.add(new NameValuePair("area", "-1"));
+        queryParams.add(new NameValuePair("u_nfo_posts_only", "0"));
+        queryParams.add(new NameValuePair("u_comment_posts_only", "0"));
+        queryParams.add(new NameValuePair("u_url_posts_only", "0"));
+        queryParams.add(new NameValuePair("sort", "ps_edit_date"));
+        queryParams.add(new NameValuePair("order", "desc"));
+        queryParams.add(new NameValuePair("areadone", "-1"));
+        queryParams.add(new NameValuePair("feed", "csv"));
+
+        NameValuePair[] valuePairs = queryParams.toArray(new NameValuePair[] {});
+
+        get.setQueryString(valuePairs);
+
+        return get;
+    }
+
+    /**
+     * 
+     * @param show
+     * @param episode
+     * @return the method to invoke the search at Newzbin
+     */
+    private HttpMethod createSearch(Show show, Episode episode) {
+        GetMethod get = new GetMethod("http://v3.newzbin.com/search/");
+
+        List<NameValuePair> queryParams = new ArrayList<NameValuePair>();
+        queryParams.add(new NameValuePair("q", createSearchQuery(show, episode)));
+        queryParams.add(new NameValuePair("searchaction", "Search"));
+        queryParams.add(new NameValuePair("fpn", "p"));
+        queryParams.add(new NameValuePair("category", "8"));
+        queryParams.add(new NameValuePair("area", "-1"));
+        queryParams.add(new NameValuePair("u_nfo_posts_only", "0"));
+        queryParams.add(new NameValuePair("u_comment_posts_only", "0"));
+        queryParams.add(new NameValuePair("u_url_posts_only", "0"));
+        queryParams.add(new NameValuePair("sort", "ps_edit_date"));
+        queryParams.add(new NameValuePair("order", "desc"));
+        queryParams.add(new NameValuePair("areadone", "-1"));
+        queryParams.add(new NameValuePair("feed", "csv"));
+
+        NameValuePair[] valuePairs = queryParams.toArray(new NameValuePair[] {});
+
+        get.setQueryString(valuePairs);
+
+        return get;
+    }
+
+    private String createSearchQuery(Movie movie) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("^");
+        sb.append(movie.getTitle());
+        sb.append(" ");
+        sb.append(movie.getYear());
+        sb.append(" ");
+
+        if (movie.getSearchSettings() != null) {
+            sb.append(movie.getSearchSettings().getAllSearchAttributesGroupedAndOred());
+        }
+
+        if (!StringUtils.isEmpty(movie.getSearchSettings().getExtraSearchParams())) {
+            sb.append(movie.getSearchSettings().getExtraSearchParams());
+            sb.append(" ");
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * 
+     * @param show
+     * @param episode
+     * @return The query with any extra search attributes
+     */
+    private String createSearchQuery(Show show, Episode episode) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("^");
+        sb.append(show.getName());
+        sb.append(" ");
+        sb.append(episode.getSeason());
+        sb.append("x");
+        sb.append(episode.getEpisodeNo());
+        sb.append(" ");
+
+        if (show.getSearchSettings() != null) {
+            // List<String> searchAttributes = show.getSearchSettings()
+            // .getAllSearchAttributes();
+            // for (String attrib : searchAttributes) {
+            // sb.append(attrib);
+            // sb.append(" ");
+            // }
+
+            sb.append(show.getSearchSettings().getAllSearchAttributesGroupedAndOred());
+
+            if (!StringUtils.isEmpty(show.getSearchSettings().getExtraSearchParams())) {
+                sb.append(show.getSearchSettings().getExtraSearchParams());
+                sb.append(" ");
+            }
+        }
+
+        return sb.toString();
+    }
 }
