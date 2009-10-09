@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import com.greyzone.checker.NzbChecker;
@@ -24,12 +25,13 @@ public class MoviesNzbChecker implements NzbChecker {
     private IntegrationDownloader integrationDownloader;
 
     @Autowired
+    @Qualifier("XmlMovieStorage")
     private Storage<Movie>        xmlMovieStorage;
 
     @Autowired
     private ApplicationSettings   appSettings;
 
-    private Logger                log = Logger.getLogger(this.getClass());
+    private final Logger          log = Logger.getLogger(this.getClass());
 
     /*
      * (non-Javadoc)

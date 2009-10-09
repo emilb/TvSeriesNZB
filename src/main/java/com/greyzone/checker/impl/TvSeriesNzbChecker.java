@@ -6,6 +6,7 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import com.greyzone.domain.tv.Episode;
@@ -30,12 +31,13 @@ public class TvSeriesNzbChecker {
     private IntegrationDownloader integrationDownloader;
 
     @Autowired
+    @Qualifier("XmlShowStorage")
     private Storage<Show>         xmlShowStorage;
 
     @Autowired
     private ApplicationSettings   appSettings;
 
-    private Logger                log = Logger.getLogger(this.getClass());
+    private final Logger          log = Logger.getLogger(this.getClass());
 
     public void checkForDownloads() {
 
