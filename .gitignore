@@ -6,4 +6,5 @@ target
 *.log.*
 *.class
 shows.xml
+movies.xml
 tvseriesnzb.conf

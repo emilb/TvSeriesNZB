@@ -6,6 +6,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
+import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -48,7 +49,9 @@ public class NzbDownloadStarter {
                 System.exit(0);
             }
             if (line.hasOption('v')) {
-                log.setLevel(Level.ALL);
+                ConsoleAppender appender = (ConsoleAppender) Logger.getRootLogger().getAppender("stdout");
+                appender.setThreshold(Level.ALL);
+                Logger.getLogger("stdout").setLevel(Level.ALL);
             }
             if (line.hasOption('d')) {
                 appSettings.setDryRun(true);
@@ -89,7 +92,7 @@ public class NzbDownloadStarter {
     }
 
     private void doMovieCheck() {
-        MoviesNzbChecker checker = (MoviesNzbChecker) ctx.getBean("");
+        MoviesNzbChecker checker = (MoviesNzbChecker) ctx.getBean("MoviesNzbChecker");
         checker.checkForDownloads();
     }
 

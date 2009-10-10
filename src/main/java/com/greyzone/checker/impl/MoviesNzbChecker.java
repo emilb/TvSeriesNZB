@@ -48,7 +48,7 @@ public class MoviesNzbChecker implements NzbChecker {
                 continue;
             }
 
-            log.debug("Checking for new releases for movie: " + movie.getTitle());
+            log.debug("Checking for new releases for movie: " + movie);
 
             try {
                 String nzbId = indexSearcher.getIndexId(movie);
@@ -58,13 +58,13 @@ public class MoviesNzbChecker implements NzbChecker {
                     integrationDownloader.orderDownloadById(nzbId);
                     movie.setDownloaded(true);
                 } else {
-                    log.debug("No relase for " + movie.getTitle() + " found.");
+                    log.debug("No relase for " + movie + " found.");
                 }
             } catch (AuthenticationException ae) {
                 log.error(ae.getMessage());
                 throw new RuntimeException("Fatal exception, exit.");
             } catch (Exception e) {
-                log.error("Something failed when checking/downloading movie " + movie.getTitle() + " Err: "
+                log.error("Something failed when checking/downloading movie " + movie + " Err: "
                         + e.getMessage());
             }
         }

@@ -147,14 +147,14 @@ public class NewzbinSearcher implements IndexSearcher {
         if (method.getResponseHeader("Content-type").getValue().startsWith("text/html")) {
 
             // Wait for 3 seconds
-            log.debug("Too many searches to Newzbin, need to wait for 3 seconds.");
+            log.debug("Too many searches to Newzbin, need to wait for 5 seconds.");
 
             try {
-                Thread.currentThread().sleep(3500);
+                Thread.currentThread().sleep(5500);
             } catch (InterruptedException e) {}
 
             // We have tried too many times, something is wrong with newzbin!
-            if (loopCount > 2) {
+            if (loopCount > 3) {
                 log.error("Could not get a proper searchresult from Newzbin despite " + loopCount
                         + " retries.");
                 log.error("Response from Newzbin:\n" + method.getResponseBodyAsString());

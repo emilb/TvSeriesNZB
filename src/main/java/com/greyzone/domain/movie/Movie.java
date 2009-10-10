@@ -1,5 +1,7 @@
 package com.greyzone.domain.movie;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.greyzone.domain.SearchSettings;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
@@ -50,4 +52,15 @@ public class Movie {
         this.searchSettings = searchSettings;
     }
 
+    @Override
+    public String toString() {
+        StringBuffer sb = new StringBuffer();
+        sb.append(title);
+        if (!StringUtils.isEmpty(year)) {
+            sb.append(" (");
+            sb.append(year);
+            sb.append(")");
+        }
+        return sb.toString();
+    }
 }

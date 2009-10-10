@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 
 import com.greyzone.domain.movie.Movie;
 import com.greyzone.domain.movie.MoviesNzb;
-import com.greyzone.domain.tv.TvSeriesNzb;
 import com.greyzone.settings.ApplicationSettings;
 import com.greyzone.storage.Storage;
 import com.thoughtworks.xstream.XStream;
@@ -28,7 +27,7 @@ public class XmlMovieStorage implements Storage<Movie> {
     public List<Movie> getItems() {
 
         XStream x = new XStream();
-        x.processAnnotations(TvSeriesNzb.class);
+        x.processAnnotations(MoviesNzb.class);
 
         log.debug("Reading " + appSettings.getMoviesFileName());
         try {
