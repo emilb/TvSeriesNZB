@@ -7,7 +7,7 @@
 	<version>0.4</version>
 	<packaging>jar</packaging>
 	<name>Tv series NZB downloader</name>
-	<url></url>
+	<url>http://github.com/emilb/TvSeriesNZB</url>
 
 	<developers>
 		<developer>
