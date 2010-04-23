@@ -16,7 +16,6 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import au.com.bytecode.opencsv.CSVReader;
 
@@ -29,7 +28,7 @@ import com.greyzone.exceptions.ServiceUnavailableException;
 import com.greyzone.indexsearch.IndexSearcher;
 import com.greyzone.settings.ApplicationSettings;
 
-@Service
+//@Service
 public class NewzbinSearcher implements IndexSearcher {
 
     @Autowired
@@ -150,7 +149,7 @@ public class NewzbinSearcher implements IndexSearcher {
             log.debug("Too many searches to Newzbin, need to wait for 5 seconds.");
 
             try {
-                Thread.currentThread().sleep(5500);
+                Thread.sleep(5500);
             } catch (InterruptedException e) {}
 
             // We have tried too many times, something is wrong with newzbin!

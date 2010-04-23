@@ -21,10 +21,62 @@ import com.thoughtworks.xstream.XStream;
 @Service("Sabnzbd")
 public class Sabnzbd implements IntegrationDownloader {
 
-    private Logger              log = Logger.getLogger(this.getClass());
+    private final Logger        log = Logger.getLogger(this.getClass());
 
     @Autowired
     private ApplicationSettings appSettings;
+
+    @Override
+    public void orderDownloadByUrl(String url) {
+        HttpClient client = new HttpClient();
+
+        GetMethod method = new GetMethod(appSettings.getSabnzbdUrl());
+
+        List<NameValuePair> queryParams = new ArrayList<NameValuePair>();
+        queryParams.add(new NameValuePair("apikey", appSettings.getSabnzbdApiKey()));
+        queryParams.add(new NameValuePair("mode", "addurl"));
+        queryParams.add(new NameValuePair("name", url));
+        queryParams.add(new NameValuePair("cat", "tv"));
+
+        // Only supply username and password if they are specified in
+        // configuration
+        if (!StringUtils.isEmpty(appSettings.getSabnzbdUsername())
+                || !StringUtils.isEmpty(appSettings.getSabnzbdPassword())) {
+            queryParams.add(new NameValuePair("ma_username", appSettings.getSabnzbdUsername()));
+            queryParams.add(new NameValuePair("ma_password", appSettings.getSabnzbdPassword()));
+        }
+
+        NameValuePair[] valuePairs = queryParams.toArray(new NameValuePair[] {});
+
+        method.setQueryString(valuePairs);
+
+        try {
+            log.debug("Instructing SABnzbd to download nzb: " + url + " to: " + appSettings.getSabnzbdUrl());
+
+            // Do real download only if in dry run
+            if (!appSettings.isDryRun()) {
+                client.executeMethod(method);
+
+                String result = method.getResponseBodyAsString();
+                if (!result.startsWith("ok")) {
+                    log.error("SABnzbd reported an error, check your configuration! Message from SABnzbd: "
+                            + result);
+
+                    // Check if the error might be because of wrong url
+                    if ((appSettings.getSabnzbdUrl().endsWith("api"))
+                            || (appSettings.getSabnzbdUrl().endsWith("api/"))) {
+                        log
+                                .warn("The configuration property sabnzbd.url doesn't end with api, check if this really is correct!");
+                    }
+
+                    throw new RuntimeException("SABnzbd integration failed");
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to contact SABnzbd", e);
+            throw new RuntimeException("Could not contact SABnzbd.");
+        }
+    }
 
     @Override
     public void orderDownloadById(String id) {
@@ -85,6 +137,10 @@ public class Sabnzbd implements IntegrationDownloader {
         }
     }
 
+    public void orderDownloadByNzb(byte[] nzb) {
+
+    }
+
     @Override
     public void testIntegration() {
         log.info("Testing SABnzbd integration...");
@@ -128,12 +184,20 @@ public class Sabnzbd implements IntegrationDownloader {
 
     @Override
     public void orderDownloadByEpisode(Episode ep) {
-        if (StringUtils.isEmpty(ep.getIndexId())) {
-            log.debug("Could not download episode because no newzbin id was specified");
+        if (StringUtils.isEmpty(ep.getIndexId()) && (ep.getNzbFile() == null || ep.getNzbFile().length == 0)
+                && (StringUtils.isEmpty(ep.getNzbFileUri()))) {
+            log.debug("Could not download episode because no newzbin id or nzb file was specified");
             return;
         }
-        List<String> ids = new ArrayList<String>();
-        ids.add(ep.getIndexId());
-        orderDownloadByIds(ids);
+
+        if (!StringUtils.isEmpty(ep.getIndexId())) {
+            List<String> ids = new ArrayList<String>();
+            ids.add(ep.getIndexId());
+            orderDownloadByIds(ids);
+        }
+
+        else if (!StringUtils.isEmpty(ep.getNzbFileUri())) {
+            orderDownloadByUrl(ep.getNzbFileUri());
+        }
     }
 }

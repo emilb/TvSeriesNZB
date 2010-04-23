@@ -6,6 +6,8 @@ import com.greyzone.domain.tv.Episode;
 
 public interface IntegrationDownloader {
 
+    public void orderDownloadByUrl(String url);
+
     public void orderDownloadById(String id);
 
     public void orderDownloadByIds(List<String> ids);

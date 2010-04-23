@@ -55,6 +55,10 @@ public class ApplicationSettings {
         return getProperty("newzbin.password", "");
     }
 
+    public String getNzbsOrgFeed() {
+        return getProperty("nzbsorg.feed", "");
+    }
+
     public boolean isDryRun() {
         return dryRun;
     }

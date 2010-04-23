@@ -78,7 +78,7 @@ public class TvSeriesNzbChecker {
                         // at newzbin
                         for (Episode ep : episodes) {
                             if (StringUtils.isEmpty(ep.getIndexId()) && ep.getDateAired() != null) {
-                                if (ep.getDateAired().before(now)) {
+                                if (ep.getDateAired().before(now) && !episodesWithIndexId.contains(ep)) {
                                     log.warn(ep + " was not found, manual download will be needed.");
                                 }
                             }

@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.greyzone</groupId>
 	<artifactId>tvseriesnzb</artifactId>
-	<version>0.4</version>
+	<version>0.5</version>
 	<packaging>jar</packaging>
 	<name>Tv series NZB downloader</name>
 	<url>http://github.com/emilb/TvSeriesNZB</url>
@@ -55,8 +55,8 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
-					<source>1.5</source>
-					<target>1.5</target>
+					<source>1.6</source>
+					<target>1.6</target>
 					<encoding>ISO-8859-1</encoding>
 				</configuration>
 			</plugin>
@@ -154,6 +154,12 @@
 			<groupId>net.sf.opencsv</groupId>
 			<artifactId>opencsv</artifactId>
 			<version>1.8</version>
+		</dependency>
+
+		<dependency>
+		    <groupId>rome</groupId>
+		    <artifactId>rome</artifactId>
+		    <version>0.9</version>
 		</dependency>
 
 		<dependency>
