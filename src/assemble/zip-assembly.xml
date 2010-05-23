@@ -13,6 +13,13 @@
 			</includes>
 		</fileSet>
 		<fileSet>
+            <directory>.</directory>
+            <outputDirectory></outputDirectory>
+            <includes>
+                <include>README</include>
+            </includes>
+        </fileSet>
+		<fileSet>
 			<directory>target</directory>
 			<outputDirectory></outputDirectory>
 			<includes>

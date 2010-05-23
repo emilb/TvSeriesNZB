@@ -96,8 +96,7 @@ public class Episode {
         this.nzbFileUri = nzbFileUri;
     }
 
-    @Override
-    public String toString() {
+    public String getFullName() {
         StringBuilder sb = new StringBuilder();
         sb.append(show);
         sb.append(" ");
@@ -106,6 +105,13 @@ public class Episode {
         sb.append(episodeNo);
         sb.append(" ");
         sb.append(episodeName);
+        return sb.toString();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(getFullName());
         if (getNzbFile() != null && getNzbFile().length > 0) {
             sb.append(" [nzbfile length: ").append(getNzbFile().length).append("]");
         }

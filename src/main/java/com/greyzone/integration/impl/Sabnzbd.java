@@ -27,7 +27,7 @@ public class Sabnzbd implements IntegrationDownloader {
     private ApplicationSettings appSettings;
 
     @Override
-    public void orderDownloadByUrl(String url) {
+    public void orderDownloadByUrl(String url, String name) {
         HttpClient client = new HttpClient();
 
         GetMethod method = new GetMethod(appSettings.getSabnzbdUrl());
@@ -37,6 +37,9 @@ public class Sabnzbd implements IntegrationDownloader {
         queryParams.add(new NameValuePair("mode", "addurl"));
         queryParams.add(new NameValuePair("name", url));
         queryParams.add(new NameValuePair("cat", "tv"));
+        if (!StringUtils.isBlank(name)) {
+            queryParams.add(new NameValuePair("nzbname", name));
+        }
 
         // Only supply username and password if they are specified in
         // configuration
@@ -184,20 +187,20 @@ public class Sabnzbd implements IntegrationDownloader {
 
     @Override
     public void orderDownloadByEpisode(Episode ep) {
-        if (StringUtils.isEmpty(ep.getIndexId()) && (ep.getNzbFile() == null || ep.getNzbFile().length == 0)
+        if (StringUtils.isBlank(ep.getIndexId()) && (ep.getNzbFile() == null || ep.getNzbFile().length == 0)
                 && (StringUtils.isEmpty(ep.getNzbFileUri()))) {
             log.debug("Could not download episode because no newzbin id or nzb file was specified");
             return;
         }
 
-        if (!StringUtils.isEmpty(ep.getIndexId())) {
+        if (!StringUtils.isBlank(ep.getIndexId())) {
             List<String> ids = new ArrayList<String>();
             ids.add(ep.getIndexId());
             orderDownloadByIds(ids);
         }
 
         else if (!StringUtils.isEmpty(ep.getNzbFileUri())) {
-            orderDownloadByUrl(ep.getNzbFileUri());
+            orderDownloadByUrl(ep.getNzbFileUri(), ep.getFullName());
         }
     }
 }
