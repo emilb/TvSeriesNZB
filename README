@@ -13,6 +13,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+Compiling:
+
+mvn clean package
+
 Installation:
 
 1. Unpack the bundle in a directory of your choice.
@@ -28,6 +32,8 @@ Features:
 tvseriesnzb automatically searches for new tv shows that have been aired and tells 
 SABnzbd to download them. You need an account at newzbin and an installation of
 SABnzbd. 
+
+Newzbin is now dead, the program is adapted to use nzbs.org instead.
 
 Search options in show.xml:
 
