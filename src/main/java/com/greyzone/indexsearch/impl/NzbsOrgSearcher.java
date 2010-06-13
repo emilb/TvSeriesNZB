@@ -49,7 +49,7 @@ public class NzbsOrgSearcher implements IndexSearcher {
                     String title = entry.getTitle();
 
                     if (FuzzyStringUtils.fuzzyMatch(episode, title)) {
-                        episode.setNzbFile(getNzbFile(entry.getUri()));
+                        //episode.setNzbFile(getNzbFile(entry.getUri())); //removed this because sabnzbd fetches the file itself
                         episode.setNzbFileUri(entry.getUri());
                         result.add(episode);
                     }
