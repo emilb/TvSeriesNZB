@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.greyzone</groupId>
 	<artifactId>tvseriesnzb</artifactId>
-	<version>0.8-SNAPSHOT</version>
+	<version>0.9-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>Tv series NZB downloader</name>
 	<url>http://github.com/emilb/TvSeriesNZB</url>
