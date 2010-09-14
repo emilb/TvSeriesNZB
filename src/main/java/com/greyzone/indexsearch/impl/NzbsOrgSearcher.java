@@ -44,15 +44,21 @@ public class NzbsOrgSearcher implements IndexSearcher {
         try {
 
             for (Episode episode : episodes) {
-
+		
                 for (SyndEntry entry : rssList) {
                     String title = entry.getTitle();
-
+		    boolean foundEntry = false;
                     if (FuzzyStringUtils.fuzzyMatch(episode, title)) {
                         //episode.setNzbFile(getNzbFile(entry.getUri())); //removed this because sabnzbd fetches the file itself
                         episode.setNzbFileUri(entry.getUri());
                         result.add(episode);
+			
+			// Only add once
+			foundEntry = true;
                     }
+
+		    if (foundEntry)
+			break;
                 }
             }
 
