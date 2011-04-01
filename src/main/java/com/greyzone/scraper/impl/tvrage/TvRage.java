@@ -23,6 +23,8 @@ import com.greyzone.scraper.impl.tvrage.xml.TvRageResults;
 import com.greyzone.scraper.impl.tvrage.xml.TvRageSeason;
 import com.greyzone.scraper.impl.tvrage.xml.TvRageShow;
 import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.mapper.CannotResolveClassException;
+import com.thoughtworks.xstream.mapper.MapperWrapper;
 
 @Service("TvRage")
 public class TvRage implements TvScraper {
@@ -152,7 +154,21 @@ public class TvRage implements TvScraper {
         client.executeMethod(method);
         String resp = method.getResponseBodyAsString();
 
-        XStream xstream = new XStream();
+        XStream xstream = new XStream() {
+        	// Skip unknown tags
+        	protected MapperWrapper wrapMapper(MapperWrapper next) {
+                return new MapperWrapper(next) {
+                	@SuppressWarnings("rawtypes")
+                    public boolean shouldSerializeMember(Class definedIn, String fieldName) {
+                        try {
+                            return definedIn != Object.class || realClass(fieldName) != null;
+                        } catch(CannotResolveClassException cnrce) {
+                            return false;
+                        }
+                    }
+                };
+            }
+        };
         xstream.autodetectAnnotations(true);
 
         // Register top objects
