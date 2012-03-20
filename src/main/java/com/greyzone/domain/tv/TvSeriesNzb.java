@@ -2,6 +2,9 @@ package com.greyzone.domain.tv;
 
 import java.util.List;
 
+import org.apache.commons.lang.builder.ToStringBuilder;
+
+import com.greyzone.util.ToStringStyleNewLine;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
 
@@ -20,4 +23,8 @@ public class TvSeriesNzb {
 		this.shows = shows;
 	}
 
+	public String toString() {
+		return ToStringBuilder.reflectionToString(this,
+				new ToStringStyleNewLine());
+	}
 }

@@ -39,7 +39,7 @@ SABnzbd.
 Newzbin is now dead, the program is adapted to use nzbs.org instead.
 
 TODO:
-- Fix xml for tv, better and fewer search options for quality
+- (DONE) Fix xml for tv, better and fewer search options for quality and format
 - Fix search logic to implement new scene rules
 - Don't query tvrage for shows that have status Ended
 - Add persistent caching (infinispan) for tvrage lookups (update on daily basis)

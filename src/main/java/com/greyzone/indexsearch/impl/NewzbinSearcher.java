@@ -197,6 +197,7 @@ public class NewzbinSearcher implements IndexSearcher {
         sb.append(episode.getEpisodeNo());
         sb.append(" ");
 
+        /*
         if (show.getSearchSettings() != null) {
             // List<String> searchAttributes = show.getSearchSettings()
             // .getAllSearchAttributes();
@@ -212,7 +213,7 @@ public class NewzbinSearcher implements IndexSearcher {
                 sb.append(" ");
             }
         }
-
+	*/
         return sb.toString();
     }
 }
