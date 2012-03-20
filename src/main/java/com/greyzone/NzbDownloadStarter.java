@@ -11,13 +11,11 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import com.greyzone.checker.impl.MoviesNzbChecker;
 import com.greyzone.checker.impl.TvSeriesNzbChecker;
 import com.greyzone.domain.tv.Show;
 import com.greyzone.integration.impl.Sabnzbd;
 import com.greyzone.scraper.impl.tvrage.TvRage;
 import com.greyzone.settings.ApplicationSettings;
-import com.greyzone.storage.impl.XmlMovieStorage;
 import com.greyzone.storage.impl.XmlShowStorage;
 
 public class NzbDownloadStarter {
@@ -59,23 +57,12 @@ public class NzbDownloadStarter {
             if (line.hasOption('s')) {
                 appSettings.setShowsFileName(line.getOptionValue('s'));
             }
-            if (line.hasOption('f')) {
-                appSettings.setMoviesFileName(line.getOptionValue('f'));
-            }
             if (line.hasOption('c')) {
                 doSystemsCheck();
                 System.exit(0);
             }
-            if (line.hasOption('t')) {
-                doTvCheck();
-            }
-            if (line.hasOption('m')) {
-                doMovieCheck();
-            }
-            // Default to check tv-series
-            if (!line.hasOption('t') && !line.hasOption('m')) {
-                doTvCheck();
-            }
+            doTvCheck();
+            
         } catch (ParseException pe) {
             log.error("Invalid program options.", pe);
         }
@@ -88,11 +75,6 @@ public class NzbDownloadStarter {
 
     private void doTvCheck() {
         TvSeriesNzbChecker checker = (TvSeriesNzbChecker) ctx.getBean("TvSeriesNzbChecker");
-        checker.checkForDownloads();
-    }
-
-    private void doMovieCheck() {
-        MoviesNzbChecker checker = (MoviesNzbChecker) ctx.getBean("MoviesNzbChecker");
         checker.checkForDownloads();
     }
 
@@ -109,8 +91,6 @@ public class NzbDownloadStarter {
             tvrage.testIntegration(show);
         }
 
-        XmlMovieStorage xmlMovie = (XmlMovieStorage) ctx.getBean("XmlMovieStorage");
-        xmlMovie.testParsing();
         log.info("Systems check completed successfully!");
     }
 
@@ -131,12 +111,9 @@ public class NzbDownloadStarter {
         options.addOption("c", "check-configuration", false,
                 "Test SABnzbd integration and parsing of shows.xml with TVRage lookups");
         options.addOption("s", "shows-file", true, "Use specified xml file instead of shows.xml");
-        options.addOption("f", "movies-file", true, "Use specified xml file instead of movies.xml");
 
         options.addOption("h", "help", false, "Print (this) help page");
         options.addOption("v", "verbose", false, "Verbose, print all logging statments to stdout");
-        options.addOption("t", "tv", false, "Check and download available TV series");
-        options.addOption("m", "movies", false, "Check and download available movies");
 
     }
 }

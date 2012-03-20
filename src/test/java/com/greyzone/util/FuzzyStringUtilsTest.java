@@ -1,11 +1,14 @@
 package com.greyzone.util;
 
+import org.junit.Test;
+
 import junit.framework.TestCase;
 
 import com.greyzone.domain.tv.Episode;
 
 public class FuzzyStringUtilsTest extends TestCase {
 
+	@Test
     public void testZeroPad() {
         assertEquals("00", FuzzyStringUtils.zeroPad(""));
         assertEquals("00", FuzzyStringUtils.zeroPad(null));
@@ -14,6 +17,7 @@ public class FuzzyStringUtilsTest extends TestCase {
         assertEquals("01", FuzzyStringUtils.zeroPad("01"));
     }
 
+	@Test
     public void testRemoveNonAlphaNumericChars() {
         assertEquals("emils test", FuzzyStringUtils.removeNonAlphaNumericChars("emil's test"));
         assertEquals("tab test with point", FuzzyStringUtils
@@ -26,6 +30,7 @@ public class FuzzyStringUtilsTest extends TestCase {
                 .removeNonAlphaNumericChars("South.Park.S14E06.720p.HDTV.x264-IMMERSE"));
     }
 
+	@Test
     public void testFuzzyMatch() {
         // The.Mentalist.S02E19.720p.HDTV.x264-CTU
         Episode episode = new Episode();

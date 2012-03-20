@@ -73,9 +73,8 @@ public class TvSeriesNzbChecker {
 
                         Date now = new Date();
 
-                        // Find any episodes that definately have been aired but
-                        // were not found
-                        // at newzbin
+                        // Find any episodes that definitely have been aired but
+                        // were not found at newzbin
                         for (Episode ep : episodes) {
                             if (StringUtils.isEmpty(ep.getIndexId()) && ep.getDateAired() != null) {
                                 if (ep.getDateAired().before(now) && !episodesWithIndexId.contains(ep)) {

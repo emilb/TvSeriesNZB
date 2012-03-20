@@ -19,7 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import au.com.bytecode.opencsv.CSVReader;
 
-import com.greyzone.domain.movie.Movie;
 import com.greyzone.domain.tv.Episode;
 import com.greyzone.domain.tv.Show;
 import com.greyzone.exceptions.AuthenticationException;
@@ -57,43 +56,6 @@ public class NewzbinSearcher implements IndexSearcher {
         }
 
         return result;
-    }
-
-    @Override
-    public String getIndexId(Movie movie) {
-        try {
-            return getBestSearchMatch(movie, 1);
-        } catch (AuthenticationException ae) {
-            throw ae;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
-    private String getBestSearchMatch(Movie movie, int loopcount) throws IOException {
-        HttpMethod method = createSearch(movie);
-        HttpClient client = createHttpClient();
-
-        log.debug("Searching for: " + movie);
-
-        client.executeMethod(method);
-
-        try {
-            String nzbId = parseSearchResult(method, loopcount);
-            if (nzbId == null) {
-                log.debug("NO hits for:   " + movie);
-                return null;
-            }
-
-            log.debug("FOUND NZB for: " + movie);
-
-            return nzbId;
-
-        } catch (NeedToTryAgainException tryAgain) {
-            return getBestSearchMatch(movie, loopcount++);
-        }
     }
 
     private HttpClient createHttpClient() {
@@ -189,30 +151,6 @@ public class NewzbinSearcher implements IndexSearcher {
         return null;
     }
 
-    private HttpMethod createSearch(Movie movie) {
-        GetMethod get = new GetMethod("http://v3.newzbin.com/search/");
-
-        List<NameValuePair> queryParams = new ArrayList<NameValuePair>();
-        queryParams.add(new NameValuePair("q", createSearchQuery(movie)));
-        queryParams.add(new NameValuePair("searchaction", "Search"));
-        queryParams.add(new NameValuePair("fpn", "p"));
-        queryParams.add(new NameValuePair("category", "6"));
-        queryParams.add(new NameValuePair("area", "-1"));
-        queryParams.add(new NameValuePair("u_nfo_posts_only", "0"));
-        queryParams.add(new NameValuePair("u_comment_posts_only", "0"));
-        queryParams.add(new NameValuePair("u_url_posts_only", "0"));
-        queryParams.add(new NameValuePair("sort", "ps_edit_date"));
-        queryParams.add(new NameValuePair("order", "desc"));
-        queryParams.add(new NameValuePair("areadone", "-1"));
-        queryParams.add(new NameValuePair("feed", "csv"));
-
-        NameValuePair[] valuePairs = queryParams.toArray(new NameValuePair[] {});
-
-        get.setQueryString(valuePairs);
-
-        return get;
-    }
-
     /**
      * 
      * @param show
@@ -241,26 +179,6 @@ public class NewzbinSearcher implements IndexSearcher {
         get.setQueryString(valuePairs);
 
         return get;
-    }
-
-    private String createSearchQuery(Movie movie) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("^");
-        sb.append(movie.getTitle());
-        sb.append(" ");
-        sb.append(movie.getYear());
-        sb.append(" ");
-
-        if (movie.getSearchSettings() != null) {
-            sb.append(movie.getSearchSettings().getAllSearchAttributesGroupedAndOred());
-        }
-
-        if (!StringUtils.isEmpty(movie.getSearchSettings().getExtraSearchParams())) {
-            sb.append(movie.getSearchSettings().getExtraSearchParams());
-            sb.append(" ");
-        }
-
-        return sb.toString();
     }
 
     /**

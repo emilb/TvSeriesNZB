@@ -10,7 +10,6 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.greyzone.domain.movie.Movie;
 import com.greyzone.domain.tv.Episode;
 import com.greyzone.domain.tv.Show;
 import com.greyzone.indexsearch.IndexSearcher;
@@ -29,11 +28,6 @@ public class NzbsOrgSearcher implements IndexSearcher {
     private List<SyndEntry>     rssList               = null;
     private long                lastUpdate            = 0;
     private static final long   minTimeBetweenUpdates = 1000 * 60 * 5;
-
-    @Override
-    public String getIndexId(Movie movie) {
-        return null;
-    }
 
     @Override
     public List<Episode> getIndexIds(Show show, List<Episode> episodes) {

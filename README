@@ -38,6 +38,23 @@ SABnzbd.
 
 Newzbin is now dead, the program is adapted to use nzbs.org instead.
 
+TODO:
+- Fix xml for tv, better and fewer search options for quality
+- Fix search logic to implement new scene rules
+- Don't query tvrage for shows that have status Ended
+- Add persistent caching (infinispan) for tvrage lookups (update on daily basis)
+- Add true search mechanism for shows that aren't found in RSS feed
+- Fix code style
+- Remove ApplicationContext.xml and use Spring java config instead.
+- Change ApplicationSettings to Spring style config?
+- Change logging to SLF4J
+- Update HTTPClient to v4
+- Add startparam to clear cache
+- Add startparam to store NZB files to disk instead of sending url:s to sabnzbd
+- Change CLI library to jopt-simple
+- Refresh this document for instructions and usage
+- Add more JUnit 4 tests
+
 Search options in show.xml:
 
 tvseriesnzb uses Newzbin to search for available downloads. You can specify what 
