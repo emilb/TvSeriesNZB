@@ -2,13 +2,15 @@ package com.greyzone.domain.tv;
 
 import java.util.Date;
 
-public class Episode {
+import org.apache.commons.lang.StringUtils;
+
+public class Episode implements Comparable<Episode> {
     private String show;
     private String season;
     private String episodeNo;
     private String episodeName;
     private Date   dateAired;
-    private String indexId;
+    //private String indexId;
     private byte[] nzbFile;
     private String nzbFileUri;
 
@@ -18,15 +20,14 @@ public class Episode {
 
     public Episode(String show, String season, String episodeNo, String episodeName) {
         this.show = show;
-        this.season = season;
+        setSeason(season);
         this.episodeNo = episodeNo;
         this.episodeName = episodeName;
     }
 
     public Episode(String show, String season, String episodeNo, String episodeName, Date dateAired) {
-        super();
         this.show = show;
-        this.season = season;
+        setSeason(season);
         this.episodeNo = episodeNo;
         this.episodeName = episodeName;
         this.dateAired = dateAired;
@@ -45,7 +46,13 @@ public class Episode {
     }
 
     public void setSeason(String season) {
-        this.season = season;
+    	if (StringUtils.isBlank(season))
+            this.season= "00";
+
+        if (season.length() == 1)
+            this.season = "0" + season;
+        else
+        	this.season = season;
     }
 
     public String getEpisodeNo() {
@@ -62,14 +69,6 @@ public class Episode {
 
     public void setEpisodeName(String episodeName) {
         this.episodeName = episodeName;
-    }
-
-    public String getIndexId() {
-        return indexId;
-    }
-
-    public void setIndexId(String indexId) {
-        this.indexId = indexId;
     }
 
     public Date getDateAired() {
@@ -100,9 +99,9 @@ public class Episode {
         StringBuilder sb = new StringBuilder();
         sb.append(show);
         sb.append(" ");
-        sb.append(season);
+        sb.append(getSeason());
         sb.append("x");
-        sb.append(episodeNo);
+        sb.append(getEpisodeNo());
         sb.append(" ");
         sb.append(episodeName);
         return sb.toString();
@@ -110,15 +109,21 @@ public class Episode {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(getFullName());
-        if (getNzbFile() != null && getNzbFile().length > 0) {
-            sb.append(" [nzbfile length: ").append(getNzbFile().length).append("]");
-        }
-        if (getNzbFileUri() != null) {
-            sb.append(" [nzb file uri: ").append(getNzbFileUri()).append("] ");
-        }
-
-        return sb.toString();
+        return getFullName();
     }
+
+    /**
+     * a          negative integer, zero,     or a positive integer 
+     * as this object is less than, equal to, or greater than the specified object.
+     */
+	@Override
+	public int compareTo(Episode o) {
+		if (this.show.equals(o.getShow()))
+			return this.show.compareTo(o.getShow());
+		
+		if (this.getSeason().equals(o.getSeason()))
+			return this.getSeason().compareTo(o.getSeason());
+		
+		return this.getEpisodeNo().compareTo(o.getEpisodeNo());
+	}
 }

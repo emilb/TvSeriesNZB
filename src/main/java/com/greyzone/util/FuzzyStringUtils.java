@@ -3,10 +3,12 @@ package com.greyzone.util;
 import org.apache.commons.lang.StringUtils;
 
 import com.greyzone.domain.tv.Episode;
+import com.greyzone.domain.tv.Format;
+import com.greyzone.domain.tv.Quality;
 
 public class FuzzyStringUtils {
 
-    public static boolean fuzzyMatch(Episode episode, String rssTitle) {
+    public static boolean fuzzyMatch(Episode episode, Quality quality, Format format, String rssTitle) {
 
         // System.out.println("Comparing episode: " + episode);
         // System.out.println("to: " + rssTitle);
@@ -26,13 +28,17 @@ public class FuzzyStringUtils {
 
             // Episode no
             verifyContains(normalizedRssTitle, "E" + zeroPad(episode.getEpisodeNo()));
+            
+            // Quality
+            verifyContains(normalizedRssTitle, quality.toString());
+            
+            // Format
+            verifyContains(normalizedRssTitle, format.toString());
 
         } catch (Exception e) {
-            // System.out.println("no match");
             return false;
         }
 
-        // System.out.println("is a match");
         return true;
     }
 

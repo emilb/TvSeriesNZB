@@ -28,111 +28,51 @@ Installation:
 
 Running:
 
-java -jar tvseriesnzb-0.1.jar
+java -jar tvseriesnzb-0.10.jar
 
 Features:
 
 tvseriesnzb automatically searches for new tv shows that have been aired and tells 
-SABnzbd to download them. You need an account at newzbin and an installation of
+SABnzbd to download them. You need an account at NZBs.org and an installation of
 SABnzbd. 
 
-Newzbin is now dead, the program is adapted to use nzbs.org instead.
+Newzbin is now dead (to me), this program is adapted to use nzbs.org instead.
 
 TODO:
 - (DONE) Fix xml for tv, better and fewer search options for quality and format
-- Fix search logic to implement new scene rules
-- Don't query tvrage for shows that have status Ended
-- Add persistent caching (infinispan) for tvrage lookups (update on daily basis)
-- Add true search mechanism for shows that aren't found in RSS feed
+- (DONE) Fix search logic to implement new scene rules
+- (Almost done) Don't query tvrage for shows that have status Ended
+- (DONE) Add persistent caching (infinispan) for tvrage lookups (update on daily basis)
+- Fix mechanism behind two digits for season and episodes. Maybe a better comparator.
+- (DONE) Add true search mechanism for shows that aren't found in RSS feed
 - Fix code style
-- Remove ApplicationContext.xml and use Spring java config instead.
+- (DONE) Remove ApplicationContext.xml and use Spring java config instead.
 - Change ApplicationSettings to Spring style config?
 - Change logging to SLF4J
-- Update HTTPClient to v4
-- Add startparam to clear cache
+- (DONE) Update HTTPClient to v4
+- (DONE) Add startparam to clear cache
 - Add startparam to store NZB files to disk instead of sending url:s to sabnzbd
 - Change CLI library to jopt-simple
-- Refresh this document for instructions and usage
+- (Almost done) Refresh this document for instructions and usage
 - Add more JUnit 4 tests
 
-Search options in show.xml:
+tvseriesnzb uses NZBs.org to search for available downloads. You can specify what 
+quality and format you want by specifying the show:
+<TvSeriesNzb>
+  <show>
+    <name>Grey&apos;s Anatomy</name>
+    <season>08</season>
+    <episode>17</episode>
+    <quality>720p</quality>
+    <format>x264</format>
+  </show>
+</TvSeriesNzb>
 
-tvseriesnzb uses Newzbin to search for available downloads. You can specify what 
-source, format, language and subtitled language you want by adding one or more 
-parameters to the SearchSettings tag.
+In the above example tvseriesnzb will search for episodes for Grey's Anatomy with a quality of 720p and in the format
+x264. Any number of <show> parts are possible, the program will download as many episodes as possible if you specify a
+really old season. 
 
-  <Show>
-    <Name>Grey&apos;s Anatomy</Name>
-    <Season>5</Season>
-    <Episode>18</Episode>
-    <ID>3741</ID>
-    <SearchSettings>
-      <Source>HDTV</Source>
-      <Format>720p</Format>
-      <Format>x264</Format>
-      <ExtraSearchParameters>-a:sub~German -a:sub~French -a:sub~Dutch</ExtraSearchParameters>
-    </SearchSettings>
-  </Show>
+Configuration
 
-In the above example tvseriesnzb will search for episodes with a source of HDTV and in the format
-720p or x264. The ExtraSearchParameters ensures that no foreign subtitles are present. You may
-add anything you want for ExtraSearchParameters, just make sure that they follow the search rules
-at newzbin.
-
-Available sources <Source>:
-CAM 
-Screener 
-TeleCine 
-R5Retail 
-TeleSync 
-Workprint 
-VHS 
-DVD 
-HD-DVD 
-Blu-Ray 
-TVCap 
-HDTV 
-Unknown
-
-Available formats <Format>:
-DivX 
-XviD 
-DVD 
-Blu-Ray 
-HD-DVD 
-HD.TS 
-H.264 
-x264 
-AVCHD 
-SVCD 
-VCD 
-WMV 
-iPod 
-PSP 
-ratDVD 
-Other 
-720p 
-1080i 
-1080p 
-Unknown
-
-Available languages and subtitles <Language> and <Subtitle>:
-English 
-French 
-Spanish 
-German 
-Italian 
-Danish 
-Dutch 
-Japanese 
-Cantonese 
-Mandarin 
-Korean 
-Russian 
-Polish 
-Vietnamese 
-Swedish 
-Norwegian 
-Finnish 
-Turkish 
-Unknown
+tvseriesnzb.conf needs to be edited for your account at NZBs.org and your setup for SABNzbd. Absolute needed changes are
+shown with the value <change> in tvseriesnzb_example.conf file.

@@ -5,6 +5,8 @@ import org.junit.Test;
 import junit.framework.TestCase;
 
 import com.greyzone.domain.tv.Episode;
+import com.greyzone.domain.tv.Format;
+import com.greyzone.domain.tv.Quality;
 
 public class FuzzyStringUtilsTest extends TestCase {
 
@@ -37,13 +39,13 @@ public class FuzzyStringUtilsTest extends TestCase {
         episode.setEpisodeNo("19");
         episode.setSeason("02");
         episode.setShow("The Mentalist");
-        assertTrue(FuzzyStringUtils.fuzzyMatch(episode, "The.Mentalist.S02E19.720p.HDTV.x264-CTU"));
+        assertTrue(FuzzyStringUtils.fuzzyMatch(episode, Quality.SevenTwenty, Format.x264, "The.Mentalist.S02E19.720p.HDTV.x264-CTU"));
 
         // Greys.Anatomy.S06E15.720p.HDTV.X264-DIMENSION
         episode = new Episode();
         episode.setEpisodeNo("15");
         episode.setSeason("6");
         episode.setShow("Grey's Anatomy");
-        assertTrue(FuzzyStringUtils.fuzzyMatch(episode, "Greys.Anatomy.S06E15.720p.HDTV.X264-DIMENSION"));
+        assertTrue(FuzzyStringUtils.fuzzyMatch(episode, Quality.SevenTwenty, Format.x264, "Greys.Anatomy.S06E15.720p.HDTV.X264-DIMENSION"));
     }
 }

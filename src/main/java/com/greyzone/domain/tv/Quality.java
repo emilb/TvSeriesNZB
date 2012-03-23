@@ -3,7 +3,7 @@ package com.greyzone.domain.tv;
 public enum Quality {
 	HDTV("HDTV"),
 	SevenTwenty("720p"),
-	ThousandEighty("1080p");
+	TenEighty("1080p");
 	
 	private String name;
 	

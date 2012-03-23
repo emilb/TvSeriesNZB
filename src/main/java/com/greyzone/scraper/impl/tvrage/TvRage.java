@@ -5,14 +5,18 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.NameValuePair;
-import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.greyzone.cache.TvRageCache;
 import com.greyzone.domain.tv.Episode;
 import com.greyzone.domain.tv.Show;
 import com.greyzone.scraper.TvScraper;
@@ -22,6 +26,7 @@ import com.greyzone.scraper.impl.tvrage.xml.TvRageResultShow;
 import com.greyzone.scraper.impl.tvrage.xml.TvRageResults;
 import com.greyzone.scraper.impl.tvrage.xml.TvRageSeason;
 import com.greyzone.scraper.impl.tvrage.xml.TvRageShow;
+import com.greyzone.util.HttpUtils;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.mapper.CannotResolveClassException;
 import com.thoughtworks.xstream.mapper.MapperWrapper;
@@ -32,6 +37,9 @@ public class TvRage implements TvScraper {
     private final Logger           log = Logger.getLogger(this.getClass());
     private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
+    @Autowired
+    TvRageCache cache;
+    
     @Override
     public List<Episode> getAllAvailableEpisodes(Show show) {
         if (StringUtils.isEmpty(show.getId())) {
@@ -42,9 +50,16 @@ public class TvRage implements TvScraper {
 
             log.debug("Searching TVRage available episodes for show: " + show.getName());
 
-            TvRageShow tShow = (TvRageShow) queryTvRage("http://services.tvrage.com/feeds/episode_list.php",
-                    new NameValuePair("sid", show.getId()));
-
+            TvRageShow tShow = null;
+            if (cache.isInCache(show.getId())) {
+            	tShow = cache.getFromCache(show.getId());
+            } else {
+            	tShow = (TvRageShow) queryTvRage("http://services.tvrage.com/feeds/episode_list.php",
+            			new BasicNameValuePair("sid", show.getId()));
+            	
+            	cache.put(show.getId(), tShow);
+            }
+            
             ArrayList<Episode> allEp = new ArrayList<Episode>();
 
             for (TvRageSeason season : tShow.getEpisodeList().getSeasons()) {
@@ -124,14 +139,15 @@ public class TvRage implements TvScraper {
     private void populateTvRageId(Show show) {
         try {
             log.debug("Updating TVRage ID for show: " + show.getName());
-
+            
             TvRageResults results = (TvRageResults) queryTvRage(
-                    "http://services.tvrage.com/feeds/search.php", new NameValuePair("show", show.getName()));
+                    "http://services.tvrage.com/feeds/search.php", new BasicNameValuePair("show", show.getName()));
             for (TvRageResultShow rShow : results.getShows()) {
                 if (StringUtils.equalsIgnoreCase(show.getName(), rShow.getName())) {
                     show.setId(rShow.getShowid());
                     show.setName(rShow.getName());
                     show.setStatus(rShow.getStatus());
+                    log.debug(show.getName() + " has TVRage id: " + rShow.getShowid());
                     return;
                 }
             }
@@ -147,13 +163,19 @@ public class TvRage implements TvScraper {
     }
 
     private Object queryTvRage(String url, NameValuePair... parameters) throws Exception {
-        HttpClient client = new HttpClient();
+        HttpClient client = new DefaultHttpClient();
 
-        HttpMethod method = new GetMethod(url);
-        method.setQueryString(parameters);
-        client.executeMethod(method);
-        String resp = method.getResponseBodyAsString();
-
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        for (NameValuePair nvp : parameters) {
+        	params.add(nvp);
+        }
+        
+        String getUrl = HttpUtils.createGetURI(url, parameters);
+        
+        HttpGet method = new HttpGet(getUrl);
+        
+        HttpResponse response = client.execute(method);
+        String resp = HttpUtils.getContentAsString(response.getEntity());
         XStream xstream = new XStream() {
         	// Skip unknown tags
         	protected MapperWrapper wrapMapper(MapperWrapper next) {

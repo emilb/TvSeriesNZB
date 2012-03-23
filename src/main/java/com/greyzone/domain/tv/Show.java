@@ -98,6 +98,11 @@ public class Show {
 		this.format = format;
 	}
 
+	public boolean isEnded() {
+		return StringUtils.containsIgnoreCase(getStatus(), "canceled") ||
+				StringUtils.containsIgnoreCase(getStatus(), "ended");
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;

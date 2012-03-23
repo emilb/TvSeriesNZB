@@ -1,11 +1,15 @@
 package com.greyzone.scraper.impl.tvrage.xml;
 
+import java.io.Serializable;
+
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
 @XStreamAlias("episode")
-public class TvRageEpisode {
+public class TvRageEpisode implements Serializable {
+
+	private static final long serialVersionUID = -5289889858476354795L;
 
 	private String epnum;
 	private String seasonnum;

@@ -1,9 +1,14 @@
 package com.greyzone.scraper.impl.tvrage.xml;
 
+import java.io.Serializable;
+
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 
 @XStreamAlias("show")
-public class TvRageResultShow {
+public class TvRageResultShow implements Serializable {
+	
+	private static final long serialVersionUID = 8429995626052579096L;
+
 	private String showid;
 	private String name;
 	private String link;
