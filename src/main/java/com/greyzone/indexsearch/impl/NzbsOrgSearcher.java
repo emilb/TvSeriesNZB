@@ -165,7 +165,6 @@ public class NzbsOrgSearcher implements IndexSearcher {
 			HttpGet get = new HttpGet(logoutURI);
 
 			HttpResponse response = client.execute(get);
-			ThreadUtils.sleep(NOMINAL_WAIT_BETWEEN_REQUESTS);
 			String html = HttpUtils.getContentAsString(response.getEntity());
 			if (!HtmlParseUtil.assertContains(html, "You are now logged out."))
 				log.warn("Logout of NZBs.org failed:\n" + html);
