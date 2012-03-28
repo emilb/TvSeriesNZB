@@ -56,8 +56,8 @@ TODO:
 - (Almost done) Refresh this document for instructions and usage
 - Add more JUnit 4 tests
 - Fix for easier deployment (super-jar + zip?)
-- Remove unnecessary waits for nzbs.org
-- Remove double logging when show not found.
+- (DONE) Remove unnecessary waits for nzbs.org
+- (DONE) Remove double logging when show not found.
 
 tvseriesnzb uses NZBs.org to search for available downloads. You can specify what 
 quality and format you want by specifying the show:

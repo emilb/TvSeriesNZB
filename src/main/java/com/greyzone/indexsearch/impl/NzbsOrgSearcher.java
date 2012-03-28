@@ -76,25 +76,12 @@ public class NzbsOrgSearcher implements IndexSearcher {
 
 		List<Episode> result = new ArrayList<Episode>();
 
-		Episode lastEpisodeSearch = null;
-		
 		for (Episode episode : episodes) {
 			
 			// Download for this episode might have already been found
 			if (StringUtils.isNotBlank(episode.getNzbFileUri()))
 				continue;
 
-			// If last search was not a cache hit but the current (new) episode
-			// is within the same season there is no need to pause because the
-			// the next search is going to be brought from the cache.
-			if (!lastSearchFromCache.get() && 
-					(lastEpisodeSearch != null && 
-					 !lastEpisodeSearch.getSeason().equals(episode.getSeason()))) {
-			
-				log.debug("Letting websearcher sleep for a while...");
-				ThreadUtils.sleep(WAIT_MS);
-			}
-			
 			try {
 				boolean foundEntry = false;
 
@@ -115,20 +102,20 @@ public class NzbsOrgSearcher implements IndexSearcher {
 						break;
 				}
 			} catch (NoSearchHitException nse) {
-				log.info("Could not find " + episode + " in web search");
+				log.debug("Could not find " + episode + " in web search");
 			}
-
-			lastEpisodeSearch = episode;
-			
-			
 		}
 
 		return result;
 	}
 
 	private boolean isLoggedIn(HttpClient client) {
-		if (client == null)
+		log.debug("Checking if logged in to nzbs.org");
+
+		if (client == null) {
+			log.debug("No current session at nzbs.org, not logged in");
 			return false;
+		}
 		
 		try {
 			HttpGet get = new HttpGet("http://www.nzbs.org/index.php");
@@ -138,12 +125,15 @@ public class NzbsOrgSearcher implements IndexSearcher {
 			String html = HttpUtils.getContentAsString(response.getEntity());
 
 			if (!HtmlParseUtil.assertContains(html,
-					settings.getNzbsOrgUsername()))
+					settings.getNzbsOrgUsername())) {
+				log.debug("Not logged in to nzbs.org");
 				return false;
-
+			}
+			
+			log.debug("Already logged in to nzbs.org");
 			return true;
 		} catch (Exception e) {
-			log.error("Failed to check if logged in", e);
+			log.error("Failed to check if logged in to nzbs.org", e);
 			return false;
 		}
 	}
@@ -178,6 +168,7 @@ public class NzbsOrgSearcher implements IndexSearcher {
 
 	public HttpClient login() {
 		try {
+			log.debug("Attempting to login to nzbs.org");
 			HttpClient client = new DefaultHttpClient();
 			HttpPost post = new HttpPost("http://www.nzbs.org/user.php");
 
@@ -192,23 +183,29 @@ public class NzbsOrgSearcher implements IndexSearcher {
 			post.setEntity(new UrlEncodedFormEntity(formparams, "UTF-8"));
 
 			HttpResponse response = client.execute(post);
-			ThreadUtils.sleep(NOMINAL_WAIT_BETWEEN_REQUESTS);
+			
 			String html = HttpUtils.getContentAsString(response.getEntity());
 
 			if (!HtmlParseUtil.assertContains(html, "SUCCESS"))
 				throw new AuthenticationException("Login to NZBs.org failed");
 
+			log.debug("Login succeeded");
+			ThreadUtils.sleep(NOMINAL_WAIT_BETWEEN_REQUESTS);
+			log.debug("Getting index.php at nzbs.org");
 			HttpGet get = new HttpGet("http://www.nzbs.org/index.php");
 			response = client.execute(get);
 			ThreadUtils.sleep(NOMINAL_WAIT_BETWEEN_REQUESTS);
 			html = HttpUtils.getContentAsString(response.getEntity());
 
 			if (!HtmlParseUtil.assertContains(html,
-					settings.getNzbsOrgUsername()))
+					settings.getNzbsOrgUsername())) {
+				log.error("Login to nzbs.org failed with unexpected response not containing " + settings.getNzbsOrgUsername());
 				throw new AuthenticationException(
 						"Unexpected response from NZBs.org /index.php, did not contain username:\n"
 								+ html);
-
+			}
+			
+			log.debug("Login to nzbs.org succeeded");			
 			return client;
 		} catch (ClientProtocolException cpe) {
 			log.error("Failed to login at NZBs.org", cpe);
@@ -262,6 +259,7 @@ public class NzbsOrgSearcher implements IndexSearcher {
 
 		if (cache.isInCache(searchURI)) {
 			lastSearchFromCache.set(true);
+			log.debug("Got search for " + episode + " from cache");
 			return cache.getFromCache(searchURI);
 		}
 
@@ -287,7 +285,8 @@ public class NzbsOrgSearcher implements IndexSearcher {
 
 			return getSearchResultHtml(client, episode, iterationNumber + 1);
 		}
-
+		
+		log.debug("Search succeeded, caching html response");
 		cache.put(searchURI, html);
 		return html;
 	}

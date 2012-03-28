@@ -47,9 +47,9 @@ public class NzbsOrgRssFeedReader implements IndexSearcher {
 				if (StringUtils.isNotBlank(episode.getNzbFileUri()))
 					continue;
 
+				boolean foundLastEntry = false;
 				for (SyndEntry entry : rssList) {
 					String rssTitle = entry.getTitle();
-					boolean foundEntry = false;
 					if (FuzzyStringUtils.fuzzyMatch(episode, show.getQuality(),
 							show.getFormat(), rssTitle)) {
 						// episode.setNzbFile(getNzbFile(entry.getUri()));
@@ -59,11 +59,15 @@ public class NzbsOrgRssFeedReader implements IndexSearcher {
 						result.add(episode);
 
 						// Only add once
-						foundEntry = true;
+						foundLastEntry = true;
 					}
 
-					if (foundEntry)
+					if (foundLastEntry)
 						break;
+				}
+				
+				if (!foundLastEntry) {
+					log.debug("Could not find " + episode + " in rss feed search");
 				}
 			}
 
@@ -101,6 +105,7 @@ public class NzbsOrgRssFeedReader implements IndexSearcher {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private byte[] getNzbFile(String uri) throws Exception {
 
 		URL url = new URL(uri);

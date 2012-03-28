@@ -88,7 +88,7 @@ public class TvSeriesNzbChecker {
 
 				for (Episode ep : episodesWithDownloadUri) {
 					try {
-						log.info("Downloading " + ep);
+						log.info(":) Downloading " + ep);
 						integrationDownloader.orderDownloadByEpisode(ep);
 						lastSuccessfullyDownloadedEpisode = ep;
 					} catch (Exception e) {
@@ -110,7 +110,7 @@ public class TvSeriesNzbChecker {
 							
 							if (ep.getDateAired().before(now)
 									&& !episodesWithDownloadUri.contains(ep)) {
-								log.warn(ep
+								log.warn(":( " + ep
 										+ " was not found, manual download might be needed.");
 							}
 						}
