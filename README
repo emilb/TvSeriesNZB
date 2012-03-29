@@ -58,6 +58,10 @@ TODO:
 - Fix for easier deployment (super-jar + zip?)
 - (DONE) Remove unnecessary waits for nzbs.org
 - (DONE) Remove double logging when show not found.
+- Change agent for httpclient to Chrome 
+- Add nzb category id for shows (with default defined in conf)
+- The above would enable search for movies!
+
 
 tvseriesnzb uses NZBs.org to search for available downloads. You can specify what 
 quality and format you want by specifying the show:
