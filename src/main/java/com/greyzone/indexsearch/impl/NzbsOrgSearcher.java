@@ -1,6 +1,7 @@
 package com.greyzone.indexsearch.impl;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -211,6 +212,10 @@ public class NzbsOrgSearcher implements IndexSearcher {
 			log.error("Failed to login at NZBs.org", cpe);
 			throw new ServiceUnavailableException(
 					"Could not initiate client protocol during login");
+		} catch (ConnectException ce) {
+			log.error("Connect exception when login at NZBs.org", ce);
+			throw new ServiceUnavailableException(
+					"Connect Exception during login");
 		} catch (IOException ioe) {
 			log.error("Failed to login at NZBs.org", ioe);
 			throw new ServiceUnavailableException("IOException during login");

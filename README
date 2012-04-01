@@ -61,6 +61,7 @@ TODO:
 - Change agent for httpclient to Chrome 
 - Add nzb category id for shows (with default defined in conf)
 - The above would enable search for movies!
+- (DONE) Better output in non-verbose mode when downloading and not found (only warns if 1 day and 12hrs has passed since air date).
 
 
 tvseriesnzb uses NZBs.org to search for available downloads. You can specify what 

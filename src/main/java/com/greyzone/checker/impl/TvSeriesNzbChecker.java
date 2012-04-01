@@ -1,12 +1,13 @@
 package com.greyzone.checker.impl;
 
-import java.util.Calendar;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.Period;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import com.greyzone.domain.tv.Episode;
 import com.greyzone.domain.tv.Show;
 import com.greyzone.exceptions.AuthenticationException;
+import com.greyzone.exceptions.ServiceUnavailableException;
 import com.greyzone.indexsearch.IndexSearcher;
 import com.greyzone.integration.IntegrationDownloader;
 import com.greyzone.scraper.TvScraper;
@@ -44,6 +46,8 @@ public class TvSeriesNzbChecker {
 	@Autowired
 	private ApplicationSettings appSettings;
 
+	private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+	
 	private final Logger log = Logger.getLogger(this.getClass());
 
 	public void checkForDownloads() {
@@ -88,7 +92,7 @@ public class TvSeriesNzbChecker {
 
 				for (Episode ep : episodesWithDownloadUri) {
 					try {
-						log.info(":) Downloading " + ep);
+						log.info(":) Downloading: " + ep);
 						integrationDownloader.orderDownloadByEpisode(ep);
 						lastSuccessfullyDownloadedEpisode = ep;
 					} catch (Exception e) {
@@ -96,24 +100,12 @@ public class TvSeriesNzbChecker {
 					}
 				}
 
-				// Warn only if show has been aired
-				if (episodesWithDownloadUri.size() != episodes.size()) {
-
-					Date now = getCurrentDateWithNoTime();
-					
-					// Find any episodes that definitely have been aired but
-					// were not found at nzb provider
-					for (Episode ep : episodes) {
-						
-						if (StringUtils.isEmpty(ep.getNzbFileUri())
-								&& ep.getDateAired() != null) {
-							
-							if (ep.getDateAired().before(now)
-									&& !episodesWithDownloadUri.contains(ep)) {
-								log.warn(":( " + ep
-										+ " was not found, manual download might be needed.");
-							}
-						}
+				// Find any episodes that definitely have been aired but
+				// were not found at nzb provider
+				for (Episode ep : episodes) {
+					if (shouldTvShowHaveBeenDownloadable(ep)) {
+						log.warn(":( Not found: " + ep
+								+ " [aired: " + sdf.format(ep.getDateAired()) + "]");
 					}
 				}
 
@@ -130,7 +122,11 @@ public class TvSeriesNzbChecker {
 			} catch (AuthenticationException ae) {
 				log.error(ae.getMessage());
 				throw new RuntimeException("Fatal exception, exit.");
-			} catch (Exception e) {
+			} catch (ServiceUnavailableException sue) {
+				log.error("Service is not available, aborting", sue);
+				throw new RuntimeException("Service not available, exit.");
+			}
+			catch (Exception e) {
 				log.error("Something failed when checking/downloading show "
 						+ show.getName() + " Err: " + e.getMessage(), e);
 			}
@@ -142,16 +138,23 @@ public class TvSeriesNzbChecker {
 		}
 	}
 
-	private Date getCurrentDateWithNoTime() {
-		// Get Calendar object set to the date and time of the given Date object  
-		Calendar cal = Calendar.getInstance();  
-		  
-		// Set time fields to zero  
-		cal.set(Calendar.HOUR_OF_DAY, 0);  
-		cal.set(Calendar.MINUTE, 0);  
-		cal.set(Calendar.SECOND, 0);  
-		cal.set(Calendar.MILLISECOND, 0);
+	private boolean shouldTvShowHaveBeenDownloadable(Episode ep) {
+		// Download URI exists, this is already downloaded
+		if (StringUtils.isNotEmpty(ep.getNzbFileUri()))
+			return false;
 		
-		return cal.getTime();
+		// Unknown air date
+		if (ep.getDateAired() == null)
+			return false;
+		
+		DateTime airDate = new DateTime(ep.getDateAired().getTime());
+		DateTime now = new DateTime();
+		
+		if (!airDate.isBefore(now))
+			return false;
+		
+		Period period = new Period(airDate, now);
+		log.debug("Period between airDate and now: " + period.getDays() + "days, " + period.getHours() + "hrs");
+		return (period.getDays() > 1 && period.getHours() > 12); 
 	}
 }
