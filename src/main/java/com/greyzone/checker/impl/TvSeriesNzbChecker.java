@@ -7,7 +7,11 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+import org.joda.time.Duration;
+import org.joda.time.Interval;
 import org.joda.time.Period;
+import org.joda.time.format.PeriodFormatter;
+import org.joda.time.format.PeriodFormatterBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -47,7 +51,7 @@ public class TvSeriesNzbChecker {
 	private ApplicationSettings appSettings;
 
 	private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-	
+
 	private final Logger log = Logger.getLogger(this.getClass());
 
 	public void checkForDownloads() {
@@ -76,17 +80,18 @@ public class TvSeriesNzbChecker {
 						+ " episodes that might have been aired.");
 
 				// Search in RSS feed
-				List<Episode> episodesWithDownloadUri = rssSearcher.getIndexIds(
-						show, episodes);
+				List<Episode> episodesWithDownloadUri = rssSearcher
+						.getIndexIds(show, episodes);
 
 				// Complement search with Web scrape
-				episodesWithDownloadUri.addAll(webSearcher.getIndexIds(show, episodes));
-				
+				episodesWithDownloadUri.addAll(webSearcher.getIndexIds(show,
+						episodes));
+
 				// Sort
 				Collections.sort(episodesWithDownloadUri);
-				
-				log.debug("Ordering dowload of " + episodesWithDownloadUri.size()
-						+ " episodes.");
+
+				log.debug("Ordering dowload of "
+						+ episodesWithDownloadUri.size() + " episodes.");
 
 				Episode lastSuccessfullyDownloadedEpisode = null;
 
@@ -104,8 +109,8 @@ public class TvSeriesNzbChecker {
 				// were not found at nzb provider
 				for (Episode ep : episodes) {
 					if (shouldTvShowHaveBeenDownloadable(ep)) {
-						log.warn(":( Not found: " + ep
-								+ " [aired: " + sdf.format(ep.getDateAired()) + "]");
+						log.warn(":( Not found: " + ep + " [aired: "
+								+ sdf.format(ep.getDateAired()) + "]");
 					}
 				}
 
@@ -125,8 +130,7 @@ public class TvSeriesNzbChecker {
 			} catch (ServiceUnavailableException sue) {
 				log.error("Service is not available, aborting", sue);
 				throw new RuntimeException("Service not available, exit.");
-			}
-			catch (Exception e) {
+			} catch (Exception e) {
 				log.error("Something failed when checking/downloading show "
 						+ show.getName() + " Err: " + e.getMessage(), e);
 			}
@@ -142,19 +146,21 @@ public class TvSeriesNzbChecker {
 		// Download URI exists, this is already downloaded
 		if (StringUtils.isNotEmpty(ep.getNzbFileUri()))
 			return false;
-		
+
 		// Unknown air date
 		if (ep.getDateAired() == null)
 			return false;
-		
+
 		DateTime airDate = new DateTime(ep.getDateAired().getTime());
 		DateTime now = new DateTime();
-		
-		if (!airDate.isBefore(now))
+
+		if (airDate.isAfter(now))
 			return false;
+
+		Duration duration = new Interval(airDate, now).toDuration();
 		
-		Period period = new Period(airDate, now);
-		log.debug("Period between airDate and now: " + period.getDays() + "days, " + period.getHours() + "hrs");
-		return (period.getDays() > 1 && period.getHours() > 12); 
+		log.debug(ep + " was aired " + duration.getStandardDays() + " days ago");
+		
+		return duration.getStandardHours() > 36;
 	}
 }

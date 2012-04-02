@@ -27,6 +27,9 @@ public class Show {
 	@XStreamAlias("status")
 	private String status;
 
+	@XStreamAlias("search")
+	private String search;
+	
 	@XStreamConverter(QualityConverter.class)
 	private Quality quality;
 	
@@ -96,6 +99,14 @@ public class Show {
 
 	public void setFormat(Format format) {
 		this.format = format;
+	}
+	
+	public String getSearchString() {
+		return search;
+	}
+
+	public void setSearchString(String search) {
+		this.search = search;
 	}
 
 	public boolean isEnded() {

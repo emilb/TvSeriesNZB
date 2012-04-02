@@ -12,6 +12,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.CoreProtocolPNames;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ import com.greyzone.scraper.impl.tvrage.xml.TvRageResultShow;
 import com.greyzone.scraper.impl.tvrage.xml.TvRageResults;
 import com.greyzone.scraper.impl.tvrage.xml.TvRageSeason;
 import com.greyzone.scraper.impl.tvrage.xml.TvRageShow;
+import com.greyzone.settings.ApplicationSettings;
 import com.greyzone.util.HttpUtils;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.mapper.CannotResolveClassException;
@@ -39,6 +41,9 @@ public class TvRage implements TvScraper {
 
     @Autowired
     TvRageCache cache;
+    
+    @Autowired
+	ApplicationSettings settings;
     
     @Override
     public List<Episode> getAllAvailableEpisodes(Show show) {
@@ -164,6 +169,7 @@ public class TvRage implements TvScraper {
 
     private Object queryTvRage(String url, NameValuePair... parameters) throws Exception {
         HttpClient client = new DefaultHttpClient();
+        client.getParams().setParameter(CoreProtocolPNames.USER_AGENT, settings.getHttpClientUserAgent());
 
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         for (NameValuePair nvp : parameters) {

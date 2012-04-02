@@ -85,6 +85,10 @@ public class ApplicationSettings {
 		return getProperty("nzbsorg.category", "14");
 	}
 
+	public String getHttpClientUserAgent() {
+		return getProperty("httpclient.useragent", "Mozilla/5.0");
+	}
+	
 	public boolean isDryRun() {
 		return dryRun;
 	}

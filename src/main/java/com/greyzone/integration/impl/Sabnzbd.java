@@ -10,6 +10,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.CoreProtocolPNames;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,14 +29,15 @@ public class Sabnzbd implements IntegrationDownloader {
     private final Logger        log = Logger.getLogger(this.getClass());
 
     @Autowired
-    private ApplicationSettings appSettings;
+    private ApplicationSettings settings;
 
     @Override
     public void orderDownloadByUrl(String url, String name) {
         HttpClient client = new DefaultHttpClient();
+        client.getParams().setParameter(CoreProtocolPNames.USER_AGENT, settings.getHttpClientUserAgent());
 
         List<NameValuePair> queryParams = new ArrayList<NameValuePair>();
-        queryParams.add(new BasicNameValuePair("apikey", appSettings.getSabnzbdApiKey()));
+        queryParams.add(new BasicNameValuePair("apikey", settings.getSabnzbdApiKey()));
         queryParams.add(new BasicNameValuePair("mode", "addurl"));
         queryParams.add(new BasicNameValuePair("name", url));
         queryParams.add(new BasicNameValuePair("cat", "tv"));
@@ -45,19 +47,19 @@ public class Sabnzbd implements IntegrationDownloader {
 
         // Only supply username and password if they are specified in
         // configuration
-        if (!StringUtils.isEmpty(appSettings.getSabnzbdUsername())
-                || !StringUtils.isEmpty(appSettings.getSabnzbdPassword())) {
-            queryParams.add(new BasicNameValuePair("ma_username", appSettings.getSabnzbdUsername()));
-            queryParams.add(new BasicNameValuePair("ma_password", appSettings.getSabnzbdPassword()));
+        if (!StringUtils.isEmpty(settings.getSabnzbdUsername())
+                || !StringUtils.isEmpty(settings.getSabnzbdPassword())) {
+            queryParams.add(new BasicNameValuePair("ma_username", settings.getSabnzbdUsername()));
+            queryParams.add(new BasicNameValuePair("ma_password", settings.getSabnzbdPassword()));
         }
 
-        HttpGet method = new HttpGet(HttpUtils.createGetURI(appSettings.getSabnzbdUrl(), queryParams));
+        HttpGet method = new HttpGet(HttpUtils.createGetURI(settings.getSabnzbdUrl(), queryParams));
 
         try {
-            log.debug("Instructing SABnzbd to download nzb: " + url + " to: " + appSettings.getSabnzbdUrl());
+            log.debug("Instructing SABnzbd to download nzb: " + url + " to: " + settings.getSabnzbdUrl());
 
             // Do real download only if in dry run
-            if (!appSettings.isDryRun()) {
+            if (!settings.isDryRun()) {
                 HttpResponse response = client.execute(method);
 
                 String result = HttpUtils.getContentAsString(response.getEntity());
@@ -66,8 +68,8 @@ public class Sabnzbd implements IntegrationDownloader {
                             + result);
 
                     // Check if the error might be because of wrong url
-                    if ((appSettings.getSabnzbdUrl().endsWith("api"))
-                            || (appSettings.getSabnzbdUrl().endsWith("api/"))) {
+                    if ((settings.getSabnzbdUrl().endsWith("api"))
+                            || (settings.getSabnzbdUrl().endsWith("api/"))) {
                         log
                                 .warn("The configuration property sabnzbd.url doesn't end with api, check if this really is correct!");
                     }
@@ -90,21 +92,22 @@ public class Sabnzbd implements IntegrationDownloader {
         log.info("Testing SABnzbd integration...");
 
         HttpClient client = new DefaultHttpClient();
+        client.getParams().setParameter(CoreProtocolPNames.USER_AGENT, settings.getHttpClientUserAgent());
 
         List<NameValuePair> queryParams = new ArrayList<NameValuePair>();
-        queryParams.add(new BasicNameValuePair("apikey", appSettings.getSabnzbdApiKey()));
+        queryParams.add(new BasicNameValuePair("apikey", settings.getSabnzbdApiKey()));
         queryParams.add(new BasicNameValuePair("mode", "qstatus"));
         queryParams.add(new BasicNameValuePair("output", "xml"));
 
         // Only supply username and password if they are specified in
         // configuration
-        if (!StringUtils.isEmpty(appSettings.getSabnzbdUsername())
-                || !StringUtils.isEmpty(appSettings.getSabnzbdPassword())) {
-            queryParams.add(new BasicNameValuePair("ma_username", appSettings.getSabnzbdUsername()));
-            queryParams.add(new BasicNameValuePair("ma_password", appSettings.getSabnzbdPassword()));
+        if (!StringUtils.isEmpty(settings.getSabnzbdUsername())
+                || !StringUtils.isEmpty(settings.getSabnzbdPassword())) {
+            queryParams.add(new BasicNameValuePair("ma_username", settings.getSabnzbdUsername()));
+            queryParams.add(new BasicNameValuePair("ma_password", settings.getSabnzbdPassword()));
         }
 
-        HttpGet method = new HttpGet(HttpUtils.createGetURI(appSettings.getSabnzbdUrl(), queryParams));
+        HttpGet method = new HttpGet(HttpUtils.createGetURI(settings.getSabnzbdUrl(), queryParams));
         
         String resp = null;
         try {
