@@ -31,6 +31,7 @@ import com.greyzone.exceptions.NoSearchHitException;
 import com.greyzone.exceptions.ServiceUnavailableException;
 import com.greyzone.indexsearch.IndexSearcher;
 import com.greyzone.settings.ApplicationSettings;
+import com.greyzone.util.EpisodeUtils;
 import com.greyzone.util.FuzzyStringUtils;
 import com.greyzone.util.HtmlParseUtil;
 import com.greyzone.util.HttpUtils;
@@ -61,7 +62,7 @@ public class NzbsOrgSearcher implements IndexSearcher {
 	private static final long NOMINAL_WAIT_BETWEEN_REQUESTS = 2500;
 	private static final long EXTRA_RANDOM_WAIT_MAX = 1500;
 	
-	private HttpClient client;
+	private HttpClient client = null;
 
 	@Override
 	public List<Episode> getIndexIds(Show show, List<Episode> episodes) {
@@ -82,11 +83,15 @@ public class NzbsOrgSearcher implements IndexSearcher {
 			if (StringUtils.isNotBlank(episode.getNzbFileUri()))
 				continue;
 
+			// If the episode was aired within the last 36 hrs it should have been found
+			// in the RSS feed. No need to search then.
+			if (EpisodeUtils.getHoursAgoEpisodeAired(episode) < 36)
+				continue;
+			
 			try {
 				boolean foundEntry = false;
 
-				List<SearchResultItem> searchResult = getSearchResult(client,
-						episode, show);
+				List<SearchResultItem> searchResult = getSearchResult(episode, show);
 				for (SearchResultItem rsi : searchResult) {
 
 					if (FuzzyStringUtils.fuzzyMatch(episode, show.getQuality(),
@@ -109,19 +114,19 @@ public class NzbsOrgSearcher implements IndexSearcher {
 		return result;
 	}
 
-	private boolean isLoggedInCheckSimple(HttpClient client) {
+	private boolean isLoggedInCheckSimple() {
 		if (client == null) {
-			log.debug("No current session at nzbs.org, not logged in");
+			log.debug("HttpClient is null, not initialized.");
 			return false;
 		}
 		
 		return true;
 	}
 	
-	private boolean isLoggedIn(HttpClient client) {
+	private boolean isLoggedIn() {
 		log.debug("Checking if logged in to nzbs.org");
 
-		if (!isLoggedInCheckSimple(client))
+		if (!isLoggedInCheckSimple())
 			return false;
 		
 		try {
@@ -173,11 +178,14 @@ public class NzbsOrgSearcher implements IndexSearcher {
 		}
 	}
 
-	public HttpClient login() {
+	public void login() {
 		try {
 			log.debug("Attempting to login to nzbs.org");
-			HttpClient client = new DefaultHttpClient();
-			client.getParams().setParameter(CoreProtocolPNames.USER_AGENT, settings.getHttpClientUserAgent());
+			if (client == null) {
+				client = new DefaultHttpClient();
+				client.getParams().setParameter(CoreProtocolPNames.USER_AGENT, settings.getHttpClientUserAgent());
+			}
+			
 			HttpPost post = new HttpPost("http://www.nzbs.org/user.php");
 
 			List<NameValuePair> formparams = new ArrayList<NameValuePair>();
@@ -214,7 +222,6 @@ public class NzbsOrgSearcher implements IndexSearcher {
 			}
 			
 			log.debug("Login to nzbs.org succeeded");			
-			return client;
 		} catch (ClientProtocolException cpe) {
 			log.error("Failed to login at NZBs.org", cpe);
 			throw new ServiceUnavailableException(
@@ -229,10 +236,9 @@ public class NzbsOrgSearcher implements IndexSearcher {
 		}
 	}
 
-	private List<SearchResultItem> getSearchResult(HttpClient client,
-			Episode episode, Show show) {
+	private List<SearchResultItem> getSearchResult(Episode episode, Show show) {
 		try {
-			String searchHtml = getSearchResultHtml(client, episode, show);
+			String searchHtml = getSearchResultHtml(episode, show);
 			return parseSearchResult(searchHtml);
 		} catch (IOException ioe) {
 			log.error("Failed to search for " + episode.toString()
@@ -247,12 +253,12 @@ public class NzbsOrgSearcher implements IndexSearcher {
 				+ settings.getNzbsOrgHash();
 	}
 
-	public String getSearchResultHtml(HttpClient client, Episode episode, Show show)
+	public String getSearchResultHtml(Episode episode, Show show)
 			throws ClientProtocolException, IOException {
-		return getSearchResultHtml(client, episode, show, 1);
+		return getSearchResultHtml(episode, show, 1);
 	}
 
-	public String getSearchResultHtml(HttpClient client, Episode episode,
+	public String getSearchResultHtml(Episode episode,
 			Show show, int iterationNumber) throws ClientProtocolException, IOException {
 
 		log.debug("Doing search for " + episode + " in iteration "
@@ -277,11 +283,12 @@ public class NzbsOrgSearcher implements IndexSearcher {
 			return cache.getFromCache(searchURI);
 		}
 
-		if (!isLoggedInCheckSimple(client) || !isLoggedIn(client)) {
-			client = login();
+		if (!isLoggedIn()) {
+			login();
 		}
 		
 		lastSearchFromCache.set(false);
+		log.debug("Executing search query...");
 		HttpGet get = new HttpGet(searchURI);
 
 		HttpResponse response = client.execute(get);
@@ -301,7 +308,7 @@ public class NzbsOrgSearcher implements IndexSearcher {
 
 			ThreadUtils.sleep(WAIT_MS);
 
-			return getSearchResultHtml(client, episode, show, iterationNumber + 1);
+			return getSearchResultHtml(episode, show, iterationNumber + 1);
 		}
 		
 		log.debug("Search succeeded, caching html response");
@@ -347,9 +354,7 @@ public class NzbsOrgSearcher implements IndexSearcher {
 			}
 
 			result.add(new SearchResultItem(name, id));
-
 			htmlToParse = HtmlParseUtil.stripFrom(htmlToParse, TAG_STRIP_FROM);
-
 			moreToFind = !StringUtils.isEmpty(htmlToParse);
 		}
 

@@ -9,9 +9,6 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.joda.time.Interval;
-import org.joda.time.Period;
-import org.joda.time.format.PeriodFormatter;
-import org.joda.time.format.PeriodFormatterBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -142,7 +139,8 @@ public class TvSeriesNzbChecker {
 		}
 	}
 
-	private boolean shouldTvShowHaveBeenDownloadable(Episode ep) {
+	//TODO: refactor to use EpisodeUtils instead.
+	protected boolean shouldTvShowHaveBeenDownloadable(Episode ep) {
 		// Download URI exists, this is already downloaded
 		if (StringUtils.isNotEmpty(ep.getNzbFileUri()))
 			return false;
