@@ -5,10 +5,11 @@ import org.apache.commons.lang.StringUtils;
 import com.greyzone.domain.tv.Episode;
 import com.greyzone.domain.tv.Format;
 import com.greyzone.domain.tv.Quality;
+import com.greyzone.domain.tv.Show;
 
 public class FuzzyStringUtils {
 
-    public static boolean fuzzyMatch(Episode episode, Quality quality, Format format, String rssTitle) {
+    public static boolean fuzzyMatch(Show show, Episode episode, Quality quality, Format format, String rssTitle) {
 
         // System.out.println("Comparing episode: " + episode);
         // System.out.println("to: " + rssTitle);
@@ -16,8 +17,10 @@ public class FuzzyStringUtils {
         String normalizedRssTitle = removeNonAlphaNumericChars(rssTitle);
 
         try {
-            // Check show name
-            String[] showName = StringUtils.split(episode.getShow());
+            // Check show name or search terms
+            String[] showName = StringUtils.split(
+            		StringUtils.isEmpty(show.getSearchString()) ? episode.getShow() : show.getSearchString());
+            
             for (String s : showName) {
                 s = removeNonAlphaNumericChars(s);
                 verifyContains(normalizedRssTitle, s);

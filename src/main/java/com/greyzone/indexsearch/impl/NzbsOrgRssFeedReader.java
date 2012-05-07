@@ -50,7 +50,7 @@ public class NzbsOrgRssFeedReader implements IndexSearcher {
 				boolean foundLastEntry = false;
 				for (SyndEntry entry : rssList) {
 					String rssTitle = entry.getTitle();
-					if (FuzzyStringUtils.fuzzyMatch(episode, show.getQuality(),
+					if (FuzzyStringUtils.fuzzyMatch(show, episode, show.getQuality(),
 							show.getFormat(), rssTitle)) {
 						// episode.setNzbFile(getNzbFile(entry.getUri()));
 						// //removed this because sabnzbd fetches the file

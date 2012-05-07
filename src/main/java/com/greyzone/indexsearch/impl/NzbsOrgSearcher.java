@@ -94,7 +94,7 @@ public class NzbsOrgSearcher implements IndexSearcher {
 				List<SearchResultItem> searchResult = getSearchResult(episode, show);
 				for (SearchResultItem rsi : searchResult) {
 
-					if (FuzzyStringUtils.fuzzyMatch(episode, show.getQuality(),
+					if (FuzzyStringUtils.fuzzyMatch(show, episode, show.getQuality(),
 							show.getFormat(), rsi.getName())) {
 						episode.setNzbFileUri(getDownloadURI(rsi));
 						result.add(episode);
