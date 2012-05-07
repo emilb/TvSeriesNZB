@@ -49,20 +49,8 @@ public class ApplicationSettings {
 		return getProperty("sabnzbd.password", "");
 	}
 
-	public String getNzbsOrgUsername() {
-		return getProperty("nzbsorg.username", "");
-	}
-
-	public String getNzbsOrgPassword() {
-		return getProperty("nzbsorg.password", "");
-	}
-
-	public String getNzbsOrgId() {
-		return getProperty("nzbsorg.id", "");
-	}
-	
-	public String getNzbsOrgHash() {
-		return getProperty("nzbsorg.hash", "");
+	public String getNzbsOrgApiKey() {
+		return getProperty("nzbsorg.apikey", "");
 	}
 	
 	public String getCacheLocation() {
