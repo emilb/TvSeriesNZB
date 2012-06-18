@@ -2,6 +2,7 @@ package com.greyzone.indexsearch.impl;
 
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,8 @@ public class NzbsOrgSearcher extends AbstractRssFeedSearcher {
 	@Autowired
 	private ApplicationSettings settings;
 
+	private final Logger log = Logger.getLogger(this.getClass());
+	
 	@Override
 	protected String getRssFeedUrl(Show show, List<Episode> episodes) {
 		String feedUrl = "http://nzbs.org/api?t=tvsearch" +
@@ -23,7 +26,7 @@ public class NzbsOrgSearcher extends AbstractRssFeedSearcher {
 				"&" + createKeyValuePair("num", "100") +
 				"&" + createKeyValuePair("apikey", settings.getNzbsOrgApiKey());
 		
-		System.out.println("Search feed: " + feedUrl);
+		log.debug("Search feed: " + feedUrl);
 		return feedUrl;
 	}
 	

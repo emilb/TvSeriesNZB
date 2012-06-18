@@ -21,6 +21,10 @@ import com.greyzone.integration.impl.xml.QJob;
 import com.greyzone.integration.impl.xml.QStatus;
 import com.greyzone.settings.ApplicationSettings;
 import com.greyzone.util.HttpUtils;
+import com.sun.syndication.feed.rss.Item;
+import com.sun.syndication.feed.synd.SyndCategory;
+import com.sun.syndication.feed.synd.SyndEnclosure;
+import com.sun.syndication.feed.synd.SyndEntry;
 import com.thoughtworks.xstream.XStream;
 
 @Service("Sabnzbd")
@@ -32,7 +36,7 @@ public class Sabnzbd implements IntegrationDownloader {
     private ApplicationSettings settings;
 
     @Override
-    public void orderDownloadByUrl(String url, String name) {
+    public void orderDownloadByUrl(String url, String name, String category) {
         HttpClient client = new DefaultHttpClient();
         client.getParams().setParameter(CoreProtocolPNames.USER_AGENT, settings.getHttpClientUserAgent());
 
@@ -40,7 +44,7 @@ public class Sabnzbd implements IntegrationDownloader {
         queryParams.add(new BasicNameValuePair("apikey", settings.getSabnzbdApiKey()));
         queryParams.add(new BasicNameValuePair("mode", "addurl"));
         queryParams.add(new BasicNameValuePair("name", url));
-        queryParams.add(new BasicNameValuePair("cat", "tv"));
+        queryParams.add(new BasicNameValuePair("cat", category));
         if (!StringUtils.isBlank(name)) {
             queryParams.add(new BasicNameValuePair("nzbname", name));
         }
@@ -129,18 +133,29 @@ public class Sabnzbd implements IntegrationDownloader {
 
     @Override
     public void orderDownloadByEpisode(Episode ep) {
-//        if (StringUtils.isBlank(ep.getIndexId()) && (ep.getNzbFile() == null || ep.getNzbFile().length == 0)
-//                && (StringUtils.isEmpty(ep.getNzbFileUri()))) {
-//            log.debug("Could not download episode because no newzbin id or nzb file was specified");
-//            return;
-//        }
-//
-//        else 
-        	
         if (!StringUtils.isEmpty(ep.getNzbFileUri())) {
-            orderDownloadByUrl(ep.getNzbFileUri(), ep.getFullName());
+            orderDownloadByUrl(ep.getNzbFileUri(), ep.getFullName(), "TV");
         } else {
         	log.warn("Could not download episode because no URI was specified for : " + ep);
         }
     }
+
+	@Override
+	public void orderDownloadByItem(SyndEntry entry) {
+		if (entry.getEnclosures().size() > 0) {
+			String downloadUrl = ((SyndEnclosure)entry.getEnclosures().get(0)).getUrl();
+			String name = entry.getTitle();
+			String category = "Misc";
+			try {
+				SyndCategory syndCategory = (SyndCategory)entry.getCategories().get(0);
+				category = syndCategory.getName();
+			} catch (Exception e) {
+				log.warn("Failed to get category from syndentry", e);
+			}
+			
+			orderDownloadByUrl(downloadUrl, name, category);
+		} else {
+			log.warn("No download URL specified for entry: " + entry);
+		}
+	}
 }

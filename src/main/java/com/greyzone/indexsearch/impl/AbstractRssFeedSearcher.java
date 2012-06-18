@@ -55,6 +55,7 @@ public abstract class AbstractRssFeedSearcher implements IndexSearcher {
 						if (entry.getEnclosures().size() > 0) {
 						
 							episode.setNzbFileUri(((SyndEnclosure)entry.getEnclosures().get(0)).getUrl());
+							entry.getCategories().get(0);
 							result.add(episode);
 							
 							// Only add once

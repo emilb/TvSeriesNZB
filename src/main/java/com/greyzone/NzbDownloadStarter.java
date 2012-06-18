@@ -140,6 +140,8 @@ public class NzbDownloadStarter {
 				"Use specified xml file instead of shows.xml");
 		options.addOption("w", "wipe-cache", false,
 				"Wipe cache for TVRage and RSS feeds");
+		options.addOption("k", "download-cart", false,
+				"Download enqueued items in cart");
 		options.addOption("h", "help", false, "Print (this) help page");
 		options.addOption("v", "verbose", false,
 				"Verbose, print all logging statments to stdout");
