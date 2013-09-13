@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
@@ -80,10 +80,11 @@ public class TvRage implements TvScraper {
 
                     if (epDate != null) {
                         allEp.add(new Episode(tShow.getName(), season.getNo(), episode.getSeasonnum(),
+                                show.getId(),
                                 episode.getTitle(), epDate));
                     } else {
                         allEp.add(new Episode(tShow.getName(), season.getNo(), episode.getSeasonnum(),
-                                episode.getTitle()));
+                                show.getId(), episode.getTitle()));
                     }
 
                 }

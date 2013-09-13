@@ -20,11 +20,13 @@ public class NzbsOrgSearcher extends AbstractRssFeedSearcher {
 	
 	@Override
 	protected String getRssFeedUrl(Show show, List<Episode> episodes) {
-		String feedUrl = "http://nzbs.org/api?t=tvsearch" +
+		String feedUrl = settings.getNzbsOrgSearch() +
 				"&" + createKeyValuePair("rid", show.getId()) +
 				"&" + createKeyValuePair("cat", settings.getNzbsOrgCategory()) +
 				"&" + createKeyValuePair("num", "100") +
-				"&" + createKeyValuePair("apikey", settings.getNzbsOrgApiKey());
+				"&" + createKeyValuePair("apikey", settings.getNzbsOrgApiKey()) +
+                "&" + createKeyValuePair("o", "json") +
+                "&" + createKeyValuePair("extended", "1");
 		
 		log.debug("Search feed: " + feedUrl);
 		return feedUrl;

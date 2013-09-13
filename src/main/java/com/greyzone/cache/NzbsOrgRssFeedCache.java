@@ -2,6 +2,8 @@ package com.greyzone.cache;
 
 import java.util.List;
 
+import com.greyzone.indexsearch.impl.AbstractRssFeedSearcher;
+import com.greyzone.indexsearch.impl.SearchResultItem;
 import org.infinispan.Cache;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +15,7 @@ import com.sun.syndication.feed.synd.SyndEntry;
 @Service("NzbsOrgRssFeedCache")
 public class NzbsOrgRssFeedCache {
 	
-	private Cache<String, List<SyndEntry>> cache;
+	private Cache<String, List<SearchResultItem>> cache;
 	
 	@Autowired
 	public NzbsOrgRssFeedCache(CacheManager cacheManager, ApplicationSettings settings) {
@@ -34,11 +36,11 @@ public class NzbsOrgRssFeedCache {
 		return cache.containsKey(id);
 	}
 	
-	public List<SyndEntry> getFromCache(String id) {
+	public List<SearchResultItem> getFromCache(String id) {
 		return cache.get(id);
 	}
 	
-	public void put(String id, List<SyndEntry> rss) {
+	public void put(String id, List<SearchResultItem> rss) {
 		cache.put(id, rss);
 	}
 }

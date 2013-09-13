@@ -64,11 +64,19 @@ public class ApplicationSettings {
 	public long getNzbsOrgCacheLifespan() {
 		return getLongProperty("cache.nzbsorg.lifespan", 3600000);
 	}
-	
+
+    public String getNzbsOrgBase() {
+        return getProperty("nzbsorg.base", "");
+    }
+
 	public String getNzbsOrgFeed() {
-		return getProperty("nzbsorg.feed", "");
+		return getNzbsOrgBase() + getProperty("nzbsorg.feed", "");
 	}
-	
+
+    public String getNzbsOrgSearch() {
+        return getNzbsOrgBase() + getProperty("nzbsorg.search", "");
+    }
+
 	public String getNzbsOrgCategory() {
 		return getProperty("nzbsorg.category", "14");
 	}

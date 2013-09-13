@@ -3,11 +3,16 @@ package com.greyzone.indexsearch.impl;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
+import com.greyzone.util.HttpUtils;
+import com.jayway.jsonpath.JsonPath;
+import net.minidev.json.JSONArray;
+import net.minidev.json.JSONObject;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -31,81 +36,78 @@ public abstract class AbstractRssFeedSearcher implements IndexSearcher {
 	private NzbsOrgRssFeedCache cache;
 	
 	private final Logger log = Logger.getLogger(this.getClass());
-	
-	@Override
-	public List<Episode> getIndexIds(Show show, List<Episode> episodes) {
-		List<Episode> result = new ArrayList<Episode>();
-		List<SyndEntry> rssList = getRssFeed(show, episodes);
 
-		try {
+    @Override
+    public List<Episode> getIndexIds(Show show, List<Episode> episodes) {
+        List<Episode> result = new ArrayList<Episode>();
+        List<SearchResultItem> rssList = getRssFeed(show, episodes);
 
-			for (Episode episode : episodes) {
-				
-				// Download for this episode might have already been found
-				if (StringUtils.isNotBlank(episode.getNzbFileUri()))
-					continue;
+        try {
 
-				boolean foundLastEntry = false;
-				for (SyndEntry entry : rssList) {
-					String rssTitle = entry.getTitle();
-					if (FuzzyStringUtils.fuzzyMatch(show, episode, show.getQuality(),
-							show.getFormat(), rssTitle)) {
+            for (Episode episode : episodes) {
 
-						// episode.setNzbFile(getNzbFile(entry.getUri()));
-						if (entry.getEnclosures().size() > 0) {
-						
-							episode.setNzbFileUri(((SyndEnclosure)entry.getEnclosures().get(0)).getUrl());
-							entry.getCategories().get(0);
-							result.add(episode);
-							
-							// Only add once
-							foundLastEntry = true;
-						} else {
-							log.warn("Found a suitable episode in RSS-feed but could not extract NZB url. " + entry.toString());
-						}
-					}
+                // Download for this episode might have already been found
+                if (StringUtils.isNotBlank(episode.getNzbFileUri()))
+                    continue;
 
-					if (foundLastEntry)
-						break;
-				}
-				
-				if (!foundLastEntry) {
-					log.debug("Could not find " + episode + " in rss feed search");
-				}
-			}
+                boolean foundLastEntry = false;
 
-			return result;
+                for (SearchResultItem entry : rssList) {
 
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
+                    if (entry.isMatch(episode)) {
+                        episode.setNzbFileUri(entry.url);
+                        result.add(episode);
+                        foundLastEntry = true;
+                    }
+
+                    if (foundLastEntry)
+                        break;
+                }
+
+                if (!foundLastEntry) {
+                    log.debug("Could not find " + episode + " in rss feed search");
+                }
+            }
+
+            return result;
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 	protected abstract String getRssFeedUrl(Show show, List<Episode> episodes);
 	
-	private List<SyndEntry> getRssFeed(Show show, List<Episode> episodes) {
+	private List<SearchResultItem> getRssFeed(Show show, List<Episode> episodes) {
 		
 		String feedUrl = getRssFeedUrl(show, episodes);
+        log.debug("feedUrl: " + feedUrl);
 		if (cache.isInCache(feedUrl)) {
 			return cache.getFromCache(feedUrl);
 		}
 
 		try {
-			List<SyndEntry> rssList = new ArrayList<SyndEntry>();
 
-			URL rss = new URL(feedUrl);
+            List<SearchResultItem> searchResultItems = new ArrayList<SearchResultItem>();
 
-			SyndFeedInput input = new SyndFeedInput();
-			SyndFeed feed = input
-					.build(new InputStreamReader(rss.openStream()));
+            URL rssUrl = new URL(feedUrl);
+            List<Object> items = JsonPath.read(rssUrl, "$..item");
+            for (Object o : items) {
+                JSONObject jo = (JSONObject)o;
 
-			for (Object entryObj : feed.getEntries()) {
-				SyndEntry entry = (SyndEntry) entryObj;
-				rssList.add(entry);
-			}
+                String title = (String)jo.get("title");
+                String link = (String)jo.get("link");
 
-			cache.put(settings.getNzbsOrgFeed(), rssList);
-			return rssList;
+                String season = getAttribute("season", jo);
+                String episode = getAttribute("episode", jo);
+                String rageId = getAttribute("rageid", jo);
+                String tvtitle = getAttribute("tvtitle", jo);
+
+                searchResultItems.add(new SearchResultItem(title, link, rageId, episode, season));
+            }
+            cache.put(settings.getNzbsOrgFeed(), searchResultItems);
+
+            return searchResultItems;
 
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -137,4 +139,14 @@ public abstract class AbstractRssFeedSearcher implements IndexSearcher {
 		return bais.toByteArray();
 
 	}
+
+    private String getAttribute(String attribute, JSONObject jsonObject) {
+        JSONArray jArr = (JSONArray)JsonPath.read(jsonObject, "$.attr.*[?(@.name == '" + attribute + "')].value");
+        if (jArr != null && jArr.size() > 0) {
+            return (String)jArr.get(0);
+        }
+        return null;
+    }
+
+
 }

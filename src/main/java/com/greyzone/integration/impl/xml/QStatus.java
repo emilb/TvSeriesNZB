@@ -2,7 +2,7 @@ package com.greyzone.integration.impl.xml;
 
 import java.util.List;
 
-import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import com.greyzone.util.ToStringStyleNewLine;
 import com.thoughtworks.xstream.annotations.XStreamAlias;

@@ -1,7 +1,7 @@
 package com.greyzone.util;
 
-import org.apache.commons.lang.SystemUtils;
-import org.apache.commons.lang.builder.StandardToStringStyle;
+import org.apache.commons.lang3.SystemUtils;
+import org.apache.commons.lang3.builder.StandardToStringStyle;
 
 @SuppressWarnings("serial")
 public class ToStringStyleNewLine extends StandardToStringStyle {

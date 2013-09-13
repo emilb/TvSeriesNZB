@@ -2,7 +2,7 @@ package com.greyzone.domain.tv;
 
 import java.util.Date;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class Episode implements Comparable<Episode> {
     private String show;
@@ -13,23 +13,26 @@ public class Episode implements Comparable<Episode> {
     //private String indexId;
     private byte[] nzbFile;
     private String nzbFileUri;
+    private String rageId;
 
     public Episode() {
 
     }
 
-    public Episode(String show, String season, String episodeNo, String episodeName) {
+    public Episode(String show, String season, String episodeNo, String episodeName, String rageId) {
         this.show = show;
         setSeason(season);
         this.episodeNo = episodeNo;
         this.episodeName = episodeName;
+        this.rageId = rageId;
     }
 
-    public Episode(String show, String season, String episodeNo, String episodeName, Date dateAired) {
+    public Episode(String show, String season, String episodeNo, String rageId, String episodeName, Date dateAired) {
         this.show = show;
         setSeason(season);
         this.episodeNo = episodeNo;
         this.episodeName = episodeName;
+        this.rageId = rageId;
         this.dateAired = dateAired;
     }
 
@@ -95,6 +98,14 @@ public class Episode implements Comparable<Episode> {
         this.nzbFileUri = nzbFileUri;
     }
 
+    public String getRageId() {
+        return rageId;
+    }
+
+    public void setRageId(String rageId) {
+        this.rageId = rageId;
+    }
+
     public String getFullName() {
         StringBuilder sb = new StringBuilder();
         sb.append(show);
@@ -118,7 +129,9 @@ public class Episode implements Comparable<Episode> {
      */
 	@Override
 	public int compareTo(Episode o) {
-		if (this.show.equals(o.getShow()))
+
+        // @ToDo: This can't be correct
+        if (this.show.equals(o.getShow()))
 			return this.show.compareTo(o.getShow());
 		
 		if (this.getSeason().equals(o.getSeason()))

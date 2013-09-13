@@ -1,6 +1,6 @@
 package com.greyzone.util;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.greyzone.domain.tv.Episode;
 import com.greyzone.domain.tv.Format;
