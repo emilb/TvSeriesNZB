@@ -78,9 +78,7 @@ public class TvSeriesNzbChecker {
 						+ " episodes that might have been aired.");
 
 				// Search in RSS feed
-				List<Episode> episodesWithDownloadUri = new ArrayList<Episode>();
-// rssSearcher
-//						.getIndexIds(show, episodes);
+				List<Episode> episodesWithDownloadUri = new ArrayList<Episode>(); // rssSearcher.getIndexIds(show, episodes);
 
 				// Complement search with Web scrape
 				episodesWithDownloadUri.addAll(webSearcher.getIndexIds(show,
